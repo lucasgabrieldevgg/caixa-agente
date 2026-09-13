@@ -265,6 +265,7 @@
   </section>
   <section id="blocks"></section>
   <div style="text-align:center;margin-top:16px">
+    <button id="btn-resetbox" class="btn" style="color:var(--danger);font-size:12.5px;padding:7px 14px" title="Zera as mensagens e a memória do agente mantendo o MESMO código e link — a caixa volta a nascer">♻️ resetar caixa</button>
     <button id="btn-delbox" class="btn" style="color:var(--danger);font-size:12.5px;padding:7px 14px" title="Apaga a caixa e TODAS as mensagens — só é possível enquanto o agente não viu nada (visto = 0)">🗑 excluir esta caixa</button>
   </div>
   <div style="text-align:center;margin-top:10px;font-size:12px;color:var(--muted)">🕒 As caixas são apagadas automaticamente 7 dias após a última mensagem.</div>
@@ -621,6 +622,16 @@ async function delBlock(id){
   }catch(e){ banner('Erro ao excluir: '+e.message,'erro'); }
   renderAll();
 }
+async function resetBox(){
+  if(!boxRef){ toast('Sem conexão — modo demo não grava'); return; }
+  if(!confirm(`Resetar a caixa ${S.code}?\n\n• Apaga TODAS as mensagens (inclusive as já vistas)\n• Zera a memória do agente (visto → 0)\n• O código e o link continuam OS MESMOS\n\nSem volta. Continuar?`)) return;
+  try{
+    const res=await boxRef.transaction(()=>({blocos:HEADER_TXT, visto:0, criado:Date.now()}));
+    if(res.committed){ S.editId=null; toast('Caixa resetada ✓ — mesmo link, caixa nova'); }
+    else toast('Não consegui resetar — tente de novo');
+  }catch(e){ banner('Erro ao resetar: '+e.message,'erro'); }
+  renderAll();
+}
 async function delBox(){
   if(!boxRef) return;
   if(S.seen>0){ toast('O agente já viu mensagens — a caixa não pode mais ser excluída 🔒'); return; }
@@ -708,6 +719,7 @@ $('#btn-open').onclick=async()=>{
   catch(e){ toast(e.message); }
   $('#btn-open').disabled=false;
 };
+$('#btn-resetbox').onclick=resetBox;
 $('#btn-delbox').onclick=delBox;
 $('#msg-copy').onclick=()=>copyText($('#msg-out').value);
 $('#msg-copy-url').onclick=()=>copyText(termUrl(S.code));
