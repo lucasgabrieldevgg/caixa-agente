@@ -467,11 +467,19 @@ function renderBlocks(){
     ? `${S.blocks.length} bloco(s) · ${p? p+' aguardando o agente 👀' : 'tudo visto ✓'}` : '';
 }
 function renderTerminal(){
-  const pend=pendentes();
+  const pend=pendentes(), prox=pend.length?pend[0].id:null;
+  const linhas=S.blocks.map(b=>{
+    const v=b.id<=S.seen;
+    return `#${String(b.id).padEnd(3)} | ${b.ts} | ${v?'visto  ✓':'NOVO'+(b.id===prox?'  ◀── pendente':'')}\n     ${b.text}`;
+  }).join('\n\n')||'(caixa vazia — nenhuma mensagem ainda)';
   const head =
 `== STATUS AO VIVO ==============================
 gist: ${S.gistId||'—'}   visto ate: #${S.seen}   pendentes: ${pend.length}   blocos: ${S.blocks.length}
 ================================================
+
+== BLOCOS (mensagens do operador) ==============
+
+${linhas}
 
 `;
   $('#term-out').textContent = head + buildInstructions();
