@@ -243,7 +243,7 @@
 <div id="m-config" class="modal" hidden>
   <div class="sheet">
     <h2>⚙️ Configuração</h2>
-    <p class="hint">O token fica somente no seu navegador (localStorage). Precisa da permissão <b>Gists: Read and write</b> (fine-grained) ou escopo <b>gist</b> (classic).</p>
+    <p class="hint">Sem token, o site abre em <b>modo leitura</b>, já apontando para a caixa certa. Cole um token com permissão <b>Gists: Read and write</b> (fine-grained) ou escopo <b>gist</b> (classic) para <b>escrever</b> neste navegador — ele fica somente aqui (localStorage).</p>
     <label>Token do GitHub</label>
     <input type="password" id="cfg-token" placeholder="github_pat_… ou ghp_…" autocomplete="off">
     <label>ID do Gist <span style="font-weight:400;color:var(--muted)">(ou deixe vazio e clique em “Criar meu Gist”)</span></label>
@@ -282,7 +282,9 @@ const store={
 };
 
 /* ============ estado ============ */
-const S={ token:null, gistId:null, login:null, blocks:[], seen:0, demo:false, editId:null, theme:'light' };
+const S={ token:null, gistId:null, login:null, blocks:[], seen:0, demo:false, readonly:false, editId:null, theme:'light' };
+/* Gist pré-configurado deste site — não é segredo: permite apenas LER a caixa. Escrever exige o token (fica no navegador do dono). */
+const DONO={ login:'lucasgabrieldevgg', gist:'1ac86ddfa66dcb54b4ba822ca874d39a' };
 const F_BLOCOS='blocos.txt', F_VISTO='visto.txt', F_INSTR='instrucoes.txt';
 let lastSync=null;
 
@@ -321,6 +323,15 @@ async function loadAll(){
   S.login=(g.owner&&g.owner.login)||'USER';
   S.blocks=parseBlocks(g.files[F_BLOCOS]&&g.files[F_BLOCOS].content);
   S.seen=parseSeen(g.files[F_VISTO]&&g.files[F_VISTO].content);
+}
+/* leitura pública (sem token): busca as raw URLs, que são abertas */
+async function loadPublic(){
+  const t=Date.now(), base=`https://gist.githubusercontent.com/${S.login||DONO.login}/${S.gistId}/raw/`;
+  const [b,v]=await Promise.all([
+    fetch(base+F_BLOCOS+'?t='+t).then(r=>{ if(!r.ok) throw new Error('HTTP '+r.status); return r.text(); }),
+    fetch(base+F_VISTO+'?t='+t).then(r=>r.text()).catch(()=>'')
+  ]);
+  S.blocks=parseBlocks(b); S.seen=parseSeen(v);
 }
 async function saveFile(name,content){
   await api('/gists/'+S.gistId,{method:'PATCH',body:{files:{[name]:{content}}}});
@@ -491,15 +502,19 @@ async function saveEdit(id){
   renderAll();
 }
 async function markSeen(id){
-  S.seen=Math.max(S.seen,id);
+  const prev=S.seen; S.seen=Math.max(S.seen,id);
   if(await guardDemo()){ renderAll(); return; }
+  if(!S.token){ S.seen=prev; renderAll(); toast('Conecte seu token para marcar visto 🔑'); openConfig(); return; }
   try{ await saveFile(F_VISTO,seenContent(S.seen)); lastSync=hhmm(); toast('Marcado como visto ✓'); }
   catch(e){ banner('Erro ao salvar: '+e.message,'erro'); }
   renderAll();
 }
 async function refresh(){
-  if(S.demo||!S.token||!S.gistId){ renderAll(); return; }
-  try{ await loadAll(); lastSync=hhmm(); banner(null); }catch(e){ banner('Erro ao carregar: '+e.message,'erro'); }
+  if(S.demo||!S.gistId){ renderAll(); return; }
+  try{
+    if(S.token){ await loadAll(); } else { await loadPublic(); }
+    lastSync=hhmm(); banner(null);
+  }catch(e){ banner('Erro ao carregar: '+e.message,'erro'); }
   renderAll();
 }
 
@@ -539,14 +554,25 @@ async function boot(){
     try{ await loadAll(); lastSync=hhmm(); renderAll(); return; }
     catch(e){
       if(e instanceof TypeError||/Failed to fetch|NetworkError/i.test(String(e))){
-        enterDemo('🟡 Sem conexão com o GitHub aqui — MODO DEMONSTRAÇÃO (os botões funcionam, nada é gravado). No site publicado, conecta de verdade.'); renderAll(); return; }
-      banner('Erro: '+e.message+' — verifique o token/ID em ⚙️ (mostrando demo)','erro');
+        enterDemo('🟡 Sem conexão com o GitHub aqui — MODO DEMONSTRAÇÃO (no site publicado, conecta de verdade).'); renderAll(); return; }
+      banner('Erro: '+e.message+' — confira o token em ⚙️ (seguindo em modo leitura)','erro');
+      S.token=null; /* token ruim, mas ainda dá pra ler a caixa */
     }
-  } else enterDemo('🟡 Nada configurado ainda — MODO DEMONSTRAÇÃO. Abra ⚙️ para colar seu token e criar o Gist de verdade.');
+  }
+  /* sem configuração neste navegador: usa o Gist pré-configurado do site (modo leitura) */
+  if(!S.gistId&&DONO.gist){ S.gistId=DONO.gist; S.login=DONO.login; S.readonly=!S.token; }
+  if(S.gistId){
+    try{ await loadPublic(); lastSync=hhmm(); renderAll(); return; }
+    catch(e){
+      if(e instanceof TypeError||/Failed to fetch|NetworkError/i.test(String(e))){
+        enterDemo('🟡 Sem conexão com o GitHub aqui — MODO DEMONSTRAÇÃO (os botões funcionam, nada é gravado). No site publicado, abre sua caixa de verdade.'); renderAll(); return; }
+      banner('Erro ao ler a caixa: '+e.message,'erro');
+    }
+  } else enterDemo('🟡 Nada configurado — MODO DEMONSTRAÇÃO. Abra ⚙️ para conectar.');
   renderAll();
 }
 function openConfig(){
-  $('#cfg-token').value=S.token||''; $('#cfg-gist').value=S.gistId||'';
+  $('#cfg-token').value=S.token||''; $('#cfg-gist').value=S.gistId||DONO.gist||'';
   $('#cfg-info').innerHTML = S.gistId
     ? `Gist atual: <b>${esc(S.gistId)}</b><br>instruções do agente (URL que você envia a ele): <code>${esc(rawUrl(F_INSTR))}</code>`
     : 'Sem Gist conectado. Cole token + clique em “Criar meu Gist”.';
