@@ -285,6 +285,8 @@ const store={
 const S={ token:null, gistId:null, login:null, blocks:[], seen:0, demo:false, readonly:false, editId:null, theme:'light' };
 /* Gist pré-configurado deste site — não é segredo: permite apenas LER a caixa. Escrever exige o token (fica no navegador do dono). */
 const DONO={ login:'lucasgabrieldevgg', gist:'1ac86ddfa66dcb54b4ba822ca874d39a' };
+/* Chave de escrita embutida (escopo apenas-gist). Pré-preenchida = site funciona sem NENHUMA configuração. */
+const TOKEN_FIXO='';
 const F_BLOCOS='blocos.txt', F_VISTO='visto.txt', F_INSTR='instrucoes.txt';
 let lastSync=null;
 
@@ -568,14 +570,21 @@ async function boot(){
   let pref='light';
   try{ pref = saved || (window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light')||'light'; }catch(e){}
   applyTheme(pref==='dark'?'dark':'light');
-  S.token=store.get('caixa_token'); S.gistId=store.get('caixa_gist');
+  const net=e=>e instanceof TypeError||/Failed to fetch|NetworkError/i.test(String(e));
+  const tkSalvo=store.get('caixa_token');
+  S.token=tkSalvo||TOKEN_FIXO||null; S.gistId=store.get('caixa_gist');
   if(S.token&&S.gistId){
     try{ await loadAll(); lastSync=hhmm(); renderAll(); return; }
     catch(e){
-      if(e instanceof TypeError||/Failed to fetch|NetworkError/i.test(String(e))){
-        enterDemo('🟡 Sem conexão com o GitHub aqui — MODO DEMONSTRAÇÃO (no site publicado, conecta de verdade).'); renderAll(); return; }
-      banner('Erro: '+e.message+' — confira o token em ⚙️ (seguindo em modo leitura)','erro');
-      S.token=null; /* token ruim, mas ainda dá pra ler a caixa */
+      if(net(e)){ enterDemo('🟡 Sem conexão com o GitHub aqui — MODO DEMONSTRAÇÃO (no site publicado, conecta de verdade).'); renderAll(); return; }
+      if(tkSalvo) store.del('caixa_token'); /* auto-reparo: token salvo inválido */
+      if(TOKEN_FIXO&&S.token!==TOKEN_FIXO){
+        S.token=TOKEN_FIXO;
+        try{ await loadAll(); lastSync=hhmm(); renderAll(); toast('Conectado automaticamente ✓'); return; }
+        catch(e2){ if(net(e2)){ enterDemo('🟡 Sem conexão — MODO DEMONSTRAÇÃO.'); renderAll(); return; } }
+      }
+      S.token=null;
+      banner('Token salvo inválido — seguindo em modo leitura. Aviso: '+(e.message||''),'erro');
     }
   }
   /* sem configuração neste navegador: usa o Gist pré-configurado do site (modo leitura) */
