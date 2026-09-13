@@ -36,6 +36,7 @@ Siga o protocolo: consulte a caixa a cada checkpoint e nunca encerre sem esvazi�
 - **✓ VISTO = memória do agente** — `visto` guarda até onde ele processou; nunca reprocessa, nunca ignora nada novo; memória sobrevive entre sessões;
 - **✏️ Editar / 🗑 excluir bloco** — só enquanto o agente não viu; depois vira imutável 🔒;
 - **🗑 Excluir caixa** — só enquanto nada foi processado (visto = 0); exclusões com **transação atômica** no servidor (sem corrida com o visto);
+- **♻️ Resetar caixa** — zera mensagens e memória do agente **mantendo o mesmo código/link** (a mensagem já enviada ao agente continua valendo); uso ilimitado enquanto a caixa estiver no prazo;
 - **🖥️ Terminal da IA** — `?c=SEU-CODIGO#terminal`: versão texto do painel com blocos ao vivo + protocolo completo (pro agente que tem navegador);
 - **REST puro** — agentes sem navegador usam `GET`/`PUT` simples, **sem token, sem login**;
 - **🌙 Tema claro/escuro**, mobile-first, zero configuração pra qualquer pessoa.
