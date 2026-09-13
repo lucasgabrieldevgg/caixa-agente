@@ -19,7 +19,6 @@
     --shadow-md:0 4px 16px rgba(16,24,40,.08);
     --shadow-lg:0 12px 40px rgba(16,24,40,.16);
     --glass:rgba(255,255,255,.78);
-    --seg-bg:#e9edf5;
   }
   [data-theme="dark"]{
     --bg:#0a0e1a; --card:#121a2b; --ink:#e6eaf4; --muted:#8b95ab;
@@ -30,7 +29,6 @@
     --shadow-md:0 4px 16px rgba(0,0,0,.45);
     --shadow-lg:0 12px 40px rgba(0,0,0,.55);
     --glass:rgba(15,21,36,.78);
-    --seg-bg:#1a2336;
   }
   *{box-sizing:border-box}
   html{-webkit-text-size-adjust:100%}
@@ -52,7 +50,7 @@
     -webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);
     border-bottom:1px solid var(--line);
     display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 16px;}
-  .brand{display:flex;align-items:center;gap:10px;min-width:0}
+  .brand{display:flex;align-items:center;gap:10px;min-width:0;background:none;border:0;padding:0;text-align:left}
   .logo{width:38px;height:38px;border-radius:11px;background:var(--grad);display:flex;
     align-items:center;justify-content:center;color:#fff;box-shadow:0 4px 12px rgba(91,124,250,.35);flex-shrink:0}
   .brand h1{font-size:16px;margin:0;font-weight:700;letter-spacing:-.01em;white-space:nowrap;
@@ -63,14 +61,9 @@
     display:inline-flex;align-items:center;justify-content:center;transition:.15s;box-shadow:var(--shadow-sm)}
   .icon:hover{border-color:var(--line2);transform:translateY(-1px);box-shadow:var(--shadow-md)}
   .icon:active{transform:translateY(0)}
-  .pill{font-size:12px;font-weight:600;color:var(--muted);border:1px solid var(--line);
-    background:var(--card);border-radius:999px;padding:5px 11px;white-space:nowrap;box-shadow:var(--shadow-sm)}
-  .pill.online{color:var(--ok)}
-  .pill.online::before{content:"";display:inline-block;width:7px;height:7px;border-radius:99px;
-    background:var(--ok);margin-right:6px;vertical-align:1px;
-    animation:pulse 2.2s ease infinite}
-  @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(22,163,74,.35)}55%{box-shadow:0 0 0 5px rgba(22,163,74,0)}}
-  @media (max-width:700px){ .brand .sub,.pill{display:none} }
+  .codechip{font:600 12.5px ui-monospace,Menlo,Consolas,monospace;color:var(--muted);
+    border:1px dashed var(--line2);border-radius:999px;padding:6px 12px;white-space:nowrap;background:var(--card)}
+  @media (max-width:700px){ .brand .sub,.codechip{display:none} }
   @media (max-width:430px){ .logo{width:34px;height:34px} }
 
   /* ─── layout ─── */
@@ -81,6 +74,37 @@
   [data-theme="dark"] .banner{background:#33270a;border-color:#5c4a1a;color:#fde68a}
   .banner.erro{background:#fee2e2;border-color:#fca5a5;color:#991b1b}
   [data-theme="dark"] .banner.erro{background:#3d1212;border-color:#7f1d1d;color:#fecaca}
+
+  /* ─── home ─── */
+  .hero{text-align:center;padding:34px 10px 10px}
+  .hero .big{font-size:30px;font-weight:800;letter-spacing:-.03em;margin:10px 0 8px}
+  .hero .lead{color:var(--muted);max-width:480px;margin:0 auto;font-size:15.5px}
+  .cards{display:grid;gap:14px;max-width:560px;margin:26px auto 0}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:22px;
+    box-shadow:var(--shadow-md);animation:fadeUp .3s ease both}
+  .card h3{margin:0 0 4px;font-size:17px}
+  .card p{margin:0 0 14px;color:var(--muted);font-size:14px}
+  .cardrow{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  input.codein{flex:1;min-width:180px;border:1px solid var(--line);border-radius:11px;padding:11px 13px;
+    font:600 16px ui-monospace,Menlo,Consolas,monospace;letter-spacing:.12em;text-transform:uppercase;
+    background:var(--bg);color:var(--ink)}
+  .btn{display:inline-flex;align-items:center;gap:7px;border-radius:11px;padding:10px 18px;font-weight:600;
+    font-size:14.5px;border:1px solid var(--line);background:var(--card);transition:.15s;box-shadow:var(--shadow-sm)}
+  .btn:hover{border-color:var(--line2);transform:translateY(-1px);box-shadow:var(--shadow-md)}
+  .btn:active{transform:translateY(0)}
+  .btn:disabled{opacity:.55;cursor:default;transform:none}
+  .btn.primary{background:var(--grad);border:0;color:#fff;box-shadow:0 4px 14px rgba(91,124,250,.4)}
+  .btn.primary:hover{box-shadow:0 6px 18px rgba(91,124,250,.5)}
+  .btn.big{padding:13px 22px;font-size:15.5px}
+  .how{max-width:560px;margin:26px auto 0;color:var(--muted);font-size:13.5px;text-align:center;line-height:1.7}
+  .how b{color:var(--ink)}
+
+  /* ─── criado com sucesso ─── */
+  .newcode{font:800 30px ui-monospace,Menlo,Consolas,monospace;letter-spacing:.1em;text-align:center;
+    background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent;margin:6px 0 2px}
+  .linkbox{display:flex;gap:8px;margin:12px 0 0}
+  .linkbox input{flex:1;min-width:0;border:1px solid var(--line);border-radius:10px;padding:10px;
+    font:12.5px ui-monospace,monospace;background:var(--bg);color:var(--muted)}
 
   /* ─── composer ─── */
   #composer{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;
@@ -94,13 +118,6 @@
   .kbd{font-size:11px;color:var(--muted);border:1px solid var(--line);border-bottom-width:2px;
     border-radius:6px;padding:2px 6px;background:var(--bg);white-space:nowrap}
   @media (max-width:560px){ .kbd{display:none} }
-  .btn{display:inline-flex;align-items:center;gap:7px;border-radius:11px;padding:9px 16px;font-weight:600;
-    font-size:14px;border:1px solid var(--line);background:var(--card);transition:.15s;box-shadow:var(--shadow-sm)}
-  .btn:hover{border-color:var(--line2);transform:translateY(-1px);box-shadow:var(--shadow-md)}
-  .btn:active{transform:translateY(0)}
-  .btn:disabled{opacity:.5;cursor:default;transform:none}
-  .btn.primary{background:var(--grad);border:0;color:#fff;box-shadow:0 4px 14px rgba(91,124,250,.4)}
-  .btn.primary:hover{box-shadow:0 6px 18px rgba(91,124,250,.5)}
 
   /* ─── blocos ─── */
   .bloco{position:relative;background:var(--card);border:1px solid var(--line);border-radius:14px;
@@ -112,8 +129,9 @@
   .bloco.visto::before{background:var(--line2)}
   .bloco.visto{opacity:.72}
   .bloco .top{display:flex;align-items:center;gap:8px;margin-bottom:6px}
-  .idchip{font:600 12px/1 ui-monospace,Menlo,Consolas,monospace;background:var(--seg-bg);
+  .idchip{font:600 12px/1 ui-monospace,Menlo,Consolas,monospace;background:var(--seg,#e9edf5);
     color:var(--muted);border-radius:7px;padding:4px 7px}
+  [data-theme="dark"] .idchip{background:#1a2336}
   .bloco .meta{font-size:12px;color:var(--muted);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .badge{font-size:11px;font-weight:700;letter-spacing:.04em;border-radius:999px;padding:4px 10px;white-space:nowrap;
     display:inline-flex;align-items:center;gap:5px}
@@ -132,7 +150,7 @@
   .vazio .t1{font-weight:600;color:var(--ink);margin-bottom:3px}
   .vazio .t2{font-size:13.5px}
 
-  /* ─── terminal (modo IA, acessado só por URL) ─── */
+  /* ─── terminal ─── */
   #view-terminal main{max-width:900px}
   #term-out{font:13.5px/1.6 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
     white-space:pre-wrap;word-break:break-word;padding:8px 2px}
@@ -148,17 +166,17 @@
   .sheet h2{margin:0 0 4px;font-size:18px;letter-spacing:-.01em}
   .sheet p.hint{margin:0 0 14px;color:var(--muted);font-size:13.5px}
   .sheet label{display:block;font-size:13px;font-weight:600;margin:12px 0 5px}
-  .sheet input[type=text],.sheet input[type=password],.sheet textarea{width:100%;border:1px solid var(--line);
-    border-radius:10px;padding:10px;font:inherit;background:var(--bg);color:var(--ink);transition:.15s}
-  .sheet input:focus,.sheet textarea:focus{border-color:#a5b4fc;box-shadow:var(--ring)}
-  .sheet textarea#msg-out{min-height:150px;font:13px/1.55 ui-monospace,Menlo,Consolas,monospace;white-space:pre}
+  .sheet textarea{width:100%;border:1px solid var(--line);border-radius:10px;padding:10px;font:inherit;
+    background:var(--bg);color:var(--ink);transition:.15s}
+  .sheet textarea:focus{border-color:#a5b4fc;box-shadow:var(--ring)}
+  .sheet textarea#msg-out{min-height:140px;font:13px/1.55 ui-monospace,Menlo,Consolas,monospace;white-space:pre}
   .sheet .row{display:flex;gap:8px;justify-content:flex-end;margin-top:16px;flex-wrap:wrap}
   .sheet .row.left{justify-content:flex-start}
   .note{font-size:12.5px;color:var(--muted);background:var(--bg);border:1px solid var(--line);
     border-radius:10px;padding:9px 11px;margin-top:12px;word-break:break-word}
   .note b{color:var(--ink)}
-  .note code{font-size:11px;background:var(--seg-bg);border-radius:5px;padding:1px 5px}
-  .note a{color:var(--brand);text-decoration:none}
+  .note code{font-size:11px;background:var(--seg,#e9edf5);border-radius:5px;padding:1px 5px}
+  [data-theme="dark"] .note code{background:#1a2336}
 
   #toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(8px);
     background:#181f2e;color:#fff;padding:10px 18px;border-radius:999px;font-size:14px;font-weight:500;
@@ -175,7 +193,7 @@
 <body>
 
 <header>
-  <div class="brand">
+  <button class="brand" id="btn-home" title="Início">
     <div class="logo">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>
     </div>
@@ -183,25 +201,53 @@
       <h1>Caixa de Entrada</h1>
       <div class="sub">mensagens para o seu agente, sem interrompê-lo</div>
     </div>
-  </div>
+  </button>
   <div class="hbtns">
-    <span id="conn" class="pill">—</span>
-    <button id="btn-refresh" class="icon" title="Recarregar do GitHub" aria-label="Recarregar">
+    <span id="codechip" class="codechip" hidden></span>
+    <button id="btn-refresh" class="icon" title="Recarregar" aria-label="Recarregar" hidden>
       <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
     </button>
     <button id="btn-theme" class="icon" title="Alternar tema" aria-label="Alternar tema">🌙</button>
-    <button id="btn-agent" class="icon" title="Mensagem para o agente (URL + mini-prompt)" aria-label="Mensagem para o agente">
+    <button id="btn-agent" class="icon" title="Mensagem para o agente" aria-label="Mensagem para o agente" hidden>
       <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
-    </button>
-    <button id="btn-config" class="icon" title="Configuração" aria-label="Configuração">
-      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
     </button>
   </div>
 </header>
 
 <div id="banner" class="banner" hidden></div>
 
-<main id="view-visual">
+<!-- ══════════ HOME: criar ou abrir caixa ══════════ -->
+<main id="view-home">
+  <div class="hero">
+    <div class="logo" style="margin:0 auto;width:52px;height:52px;border-radius:15px">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>
+    </div>
+    <div class="big">Sua caixa de entrada para o agente</div>
+    <p class="lead">Crie uma caixa, mande o link pro seu agente uma única vez e escreva instruções quando quiser — ele lê no próximo checkpoint, sem interromper a execução.</p>
+  </div>
+  <div class="cards">
+    <div class="card">
+      <h3>✨ Criar minha caixa</h3>
+      <p>Grátis, sem cadastro. Você recebe um link exclusivo da sua caixa.</p>
+      <button id="btn-create" class="btn primary big">Criar minha caixa agora</button>
+    </div>
+    <div class="card">
+      <h3>🔑 Já tenho uma caixa</h3>
+      <p>Digite o código que você recebeu quando criou.</p>
+      <div class="cardrow">
+        <input id="code-in" class="codein" placeholder="XXXX-XXXX" maxlength="9" autocomplete="off">
+        <button id="btn-open" class="btn big">Abrir</button>
+      </div>
+    </div>
+  </div>
+  <div class="how">
+    <b>Como funciona:</b> 1️⃣ crie a caixa e guarde seu link · 2️⃣ mande a mensagem pronta pro seu agente (uma vez só) ·
+    3️⃣ escreva blocos quando quiser — o agente lê no próximo checkpoint, executa e marca como visto. ✅
+  </div>
+</main>
+
+<!-- ══════════ CAIXA (visual) ══════════ -->
+<main id="view-box" hidden>
   <section id="composer">
     <textarea id="new-text" placeholder="Escreva uma instrução para o agente… (ex.: troca o botão pra azul)"></textarea>
     <div class="row">
@@ -215,48 +261,47 @@
   <section id="blocks"></section>
 </main>
 
+<!-- ══════════ TERMINAL (IA) ══════════ -->
 <div id="view-terminal" hidden>
   <main>
     <div class="termbox"><div id="term-out"></div></div>
   </main>
 </div>
 
-<!-- modal: mensagem para o agente -->
+<!-- modal: mensagem para o agente + dados da caixa -->
 <div id="m-agent" class="modal" hidden>
   <div class="sheet">
     <h2>🤖 Mensagem para o agente</h2>
-    <p class="hint">Envie <b>só isso</b> para o agente (uma vez). As instruções completas moram no link — o agente lê lá e volta a consultar a cada checkpoint. Nada de system prompt gigante.</p>
+    <p class="hint">Envie <b>só isso</b> ao agente (uma única vez). As instruções completas moram no link.</p>
     <textarea id="msg-out" readonly></textarea>
     <div class="row left">
       <button id="msg-copy" class="btn primary">Copiar mensagem</button>
       <button id="msg-copy-url" class="btn">Copiar só a URL</button>
     </div>
-    <div class="note" id="agent-note"></div>
+    <div class="note" id="box-note"></div>
     <div class="row">
-      <button id="msg-preview" class="btn">👁 Pré-visualizar terminal (o que a IA vê)</button>
+      <button id="msg-preview" class="btn">👁 Pré-visualizar terminal</button>
       <button id="msg-close" class="btn">Fechar</button>
     </div>
   </div>
 </div>
 
-<!-- modal: configuração -->
-<div id="m-config" class="modal" hidden>
+<!-- modal: caixa criada -->
+<div id="m-created" class="modal" hidden>
   <div class="sheet">
-    <h2>⚙️ Configuração</h2>
-    <p class="hint">Sem token, o site abre em <b>modo leitura</b>, já apontando para a caixa certa. Cole um token com permissão <b>Gists: Read and write</b> (fine-grained) ou escopo <b>gist</b> (classic) para <b>escrever</b> neste navegador — ele fica somente aqui (localStorage).</p>
-    <label>Token do GitHub</label>
-    <input type="password" id="cfg-token" placeholder="github_pat_… ou ghp_…" autocomplete="off">
-    <label>ID do Gist <span style="font-weight:400;color:var(--muted)">(ou deixe vazio e clique em “Criar meu Gist”)</span></label>
-    <input type="text" id="cfg-gist" placeholder="ex.: a1b2c3d4e5f6…" autocomplete="off">
-    <div class="row left">
-      <button id="cfg-create" class="btn primary">✨ Criar meu Gist</button>
-      <button id="cfg-save" class="btn">Salvar e conectar</button>
-      <button id="cfg-instr" class="btn">📝 Regravar instruções.txt</button>
-      <button id="cfg-forget" class="btn" style="color:var(--danger)">Apagar config</button>
+    <h2>🎉 Sua caixa está pronta!</h2>
+    <p class="hint">Guarde o <b>código</b> e o <b>link</b> abaixo — eles são o acesso à sua caixa (quem tem o link, usa a caixa).</p>
+    <div class="newcode" id="new-code"></div>
+    <label>Seu link exclusivo</label>
+    <div class="linkbox">
+      <input id="new-link" readonly>
+      <button id="new-copy-link" class="btn">Copiar</button>
     </div>
-    <div class="note" id="cfg-info"></div>
-    <div class="row">
-      <button id="cfg-close" class="btn">Fechar</button>
+    <label>Mensagem para o seu agente (uma única vez)</label>
+    <textarea id="new-msg" readonly style="min-height:120px;font:13px/1.55 ui-monospace,Menlo,Consolas,monospace;white-space:pre"></textarea>
+    <div class="row left">
+      <button id="new-copy-msg" class="btn primary">Copiar mensagem</button>
+      <button id="new-open" class="btn">Abrir minha caixa →</button>
     </div>
   </div>
 </div>
@@ -265,15 +310,36 @@
 
 <script>
 "use strict";
+/* ═══════════════════════════════════════════════════════════════
+   INFRA-CONFIG (fixa, mantida pelo dono do site)
+   - BOX_TOKEN: token classic de escopo APENAS 'gist' de uma conta
+     dedicada a caixas (conta-fantasma). Não dá acesso a repositórios
+     nem a nenhuma outra conta — só a gists dessa conta de serviço.
+   - REG_GIST: gist "registro" que mapeia CÓDIGO → gist da caixa.
+   ═══════════════════════════════════════════════════════════════ */
+const BOX_LOGIN='carlosdevgg';
+const REG_GIST='c147ad8296a0047bd33de928a1f33d1c';
+/* Token de escrita NÃO fica no código (push protection do GitHub bloqueia e escaneia):
+   o site busca do COFRE — arquivo site.key no gist do registro — em tempo de execução. */
+let BOX_TOKEN='';
+let _boxTokenPromise=null;
+function ensureToken(){
+  if(BOX_TOKEN) return Promise.resolve(BOX_TOKEN);
+  if(!_boxTokenPromise) _boxTokenPromise=
+    fetchText(`https://gist.githubusercontent.com/${BOX_LOGIN}/${REG_GIST}/raw/site.key?t=`+Date.now())
+      .then(t=>{ BOX_TOKEN=(t||'').trim(); if(!BOX_TOKEN) throw new Error('cofre vazio'); return BOX_TOKEN; })
+      .catch(e=>{ _boxTokenPromise=null; throw e; });
+  return _boxTokenPromise;
+}
+
 /* ============ util ============ */
 const $ = s => document.querySelector(s);
 const esc = s => s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-function toast(msg){ const t=$('#toast'); t.textContent=msg; t.classList.add('on'); setTimeout(()=>t.classList.remove('on'),2200); }
+function toast(msg){ const t=$('#toast'); t.textContent=msg; t.classList.add('on'); setTimeout(()=>t.classList.remove('on'),2400); }
 function fmt(d=new Date()){ const p=n=>String(n).padStart(2,'0');
   return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`; }
 function hhmm(d=new Date()){ const p=n=>String(n).padStart(2,'0'); return p(d.getHours())+':'+p(d.getMinutes()); }
-
-/* storage seguro (funciona mesmo em iframe sandbox, caindo pra memória) */
+function banner(msg,cls){ const b=$('#banner'); if(!msg){b.hidden=true;return;} b.hidden=false; b.className='banner'+(cls?' '+cls:''); b.textContent=msg; }
 const mem={};
 const store={
   get(k){ try{return localStorage.getItem(k);}catch(e){return k in mem?mem[k]:null;} },
@@ -282,13 +348,13 @@ const store={
 };
 
 /* ============ estado ============ */
-const S={ token:null, gistId:null, login:null, blocks:[], seen:0, demo:false, readonly:false, editId:null, theme:'light' };
-/* Gist pré-configurado deste site — não é segredo: permite apenas LER a caixa. Escrever exige o token (fica no navegador do dono). */
-const DONO={ login:'lucasgabrieldevgg', gist:'1ac86ddfa66dcb54b4ba822ca874d39a' };
-/* Chave de escrita embutida (escopo apenas-gist). Pré-preenchida = site funciona sem NENHUMA configuração. */
-const TOKEN_FIXO='';
+const S={ blocks:[], seen:0, code:null, gist:null, created:null, editId:null, theme:'light', view:'home', demo:false };
 const F_BLOCOS='blocos.txt', F_VISTO='visto.txt', F_INSTR='instrucoes.txt';
 let lastSync=null;
+const siteUrl=()=>location.origin+location.pathname;
+function boxUrl(code){ return siteUrl()+'?c='+code; }
+function termUrl(code){ return siteUrl()+'?c='+code+'#terminal'; }
+function rawGist(gist,file){ return `https://gist.githubusercontent.com/${BOX_LOGIN||'USER'}/${gist}/raw/${file}`; }
 
 /* ============ parse ============ */
 function parseBlocks(txt){
@@ -306,59 +372,14 @@ function blocosContent(blocks){
 }
 function seenContent(n){ return `visto ate #${n}\n`; }
 function pendentes(){ return S.blocks.filter(b=>b.id>S.seen); }
-function rawUrl(file){ return `https://gist.githubusercontent.com/${S.login||'USER'}/${S.gistId||'GIST'}/raw/${file}`; }
-function siteUrl(){ return location.origin+location.pathname; }
-function termUrl(){ return siteUrl()+'#terminal'; }
 
-/* ============ GitHub API ============ */
-async function api(path, opts={}){
-  const r=await fetch('https://api.github.com'+path,{
-    method:opts.method||'GET',
-    headers:{Accept:'application/vnd.github+json',Authorization:'Bearer '+S.token,'Content-Type':'application/json'},
-    body:opts.body?JSON.stringify(opts.body):undefined
-  });
-  if(!r.ok){ const t=await r.text(); throw new Error(`GitHub ${r.status}: ${t.slice(0,180)}`); }
-  return r.json();
-}
-async function loadAll(){
-  const g=await api('/gists/'+S.gistId);
-  S.login=(g.owner&&g.owner.login)||'USER';
-  S.blocks=parseBlocks(g.files[F_BLOCOS]&&g.files[F_BLOCOS].content);
-  S.seen=parseSeen(g.files[F_VISTO]&&g.files[F_VISTO].content);
-}
-/* leitura pública (sem token): busca as raw URLs, que são abertas */
-async function loadPublic(){
-  const t=Date.now(), base=`https://gist.githubusercontent.com/${S.login||DONO.login}/${S.gistId}/raw/`;
-  const [b,v]=await Promise.all([
-    fetch(base+F_BLOCOS+'?t='+t).then(r=>{ if(!r.ok) throw new Error('HTTP '+r.status); return r.text(); }),
-    fetch(base+F_VISTO+'?t='+t).then(r=>r.text()).catch(()=>'')
-  ]);
-  S.blocks=parseBlocks(b); S.seen=parseSeen(v);
-}
-async function saveFile(name,content){
-  await api('/gists/'+S.gistId,{method:'PATCH',body:{files:{[name]:{content}}}});
-}
-async function createGist(){
-  const g=await api('/gists',{method:'POST',body:{
-    description:'Caixa de Entrada do Agente',
-    public:false,
-    files:{ [F_BLOCOS]:{content:'#CAIXA DE ENTRADA — append-only. Nao apague linhas antigas.\n'},
-            [F_VISTO]:{content:'visto ate #0\n'} }
-  }});
-  S.gistId=g.id; S.login=(g.owner&&g.owner.login)||'USER';
-  store.set('caixa_gist',S.gistId);
-  return g;
-}
-async function writeInstr(){
-  await saveFile(F_INSTR, buildInstructions());
-}
-
-/* ============ instruções (fonte única: terminal + instrucoes.txt) ============ */
-function buildInstructions(){
-  const gh=`gh api gists/${S.gistId||'GIST_ID'} -X PATCH -f 'files[${F_VISTO}][content]=visto ate #N'`;
-  const curl=`curl -X PATCH -H "Authorization: token SEU_TOKEN" https://api.github.com/gists/${S.gistId||'GIST_ID'} -d '{"files":{"${F_VISTO}":{"content":"visto ate #N"}}}'`;
+/* ============ instruções da caixa (gravadas no gist na criação) ============ */
+function buildInstructions(gist,code){
+  const tk = BOX_TOKEN || 'SEU_TOKEN';
+  const curl=`curl -X PATCH -H "Authorization: token ${tk}" https://api.github.com/gists/${gist} -d '{"files":{"visto.txt":{"content":"visto ate #N"}}}'`;
+  const gh=`gh api gists/${gist} -X PATCH -f 'files[visto.txt][content]=visto ate #N'`;
 return `================================================================
-CAIXA DE ENTRADA DO AGENTE — PROTOCOLO OFICIAL
+CAIXA DE ENTRADA DO AGENTE (código ${code}) — PROTOCOLO OFICIAL
 ================================================================
 Seu OPERADOR HUMANO envia instruções para você por aqui, a
 qualquer momento, SEM interromper sua execução. Este documento
@@ -366,11 +387,11 @@ qualquer momento, SEM interromper sua execução. Este documento
 
 -- ENDEREÇOS (fixos, valem para sempre) ------------------------
 BLOCOS  (instruções do operador):
-  ${rawUrl(F_BLOCOS)}
+  ${rawGist(gist,F_BLOCOS)}
 VISTO   (sua memória de progresso):
-  ${rawUrl(F_VISTO)}
+  ${rawGist(gist,F_VISTO)}
 Painel do operador (só para humanos, você não precisa):
-  ${termUrl()}
+  ${termUrl(code)}
 
 Ao ler qualquer URL acima, acrescente "?t=<data-hora-atual>"
 para evitar cache.
@@ -398,8 +419,8 @@ sessões — comece toda sessão lendo-o.
 -- COMO MARCAR VISTO (escreva a palavra "visto") ---------------
 Depois de CONCLUIR os pendentes, grave o maior id processado
 em visto.txt com UM destes comandos (o que houver no ambiente):
-  gh:   ${gh}
   curl: ${curl}
+  gh:   ${gh}
 Fluxo por checkpoint: executar pendentes -> marcar visto ->
 reler -> decidir.
 
@@ -426,22 +447,80 @@ final e não houver novidade).
 Falha de rede ou URL fora do ar NUNCA é erro fatal: siga o
 trabalho e tente de novo no próximo checkpoint. A tarefa não
 morre por causa da caixa.
-================================================================`;
+================================================================
+`;
 }
-function buildTinyMessage(){
+function buildAgentMsg(code,gist){
 return `Você tem uma CAIXA DE ENTRADA por onde eu envio instruções a qualquer momento, sem interromper seu trabalho.
-1) Leia agora o protocolo completo (vale para sempre): ${termUrl()}
-2) Se você só consegue ler texto puro, faça fetch de: ${rawUrl(F_INSTR)} (mesmo conteúdo)
+1) Leia agora o protocolo completo (vale para sempre): ${termUrl(code)}
+2) Se você só consegue ler texto puro, faça fetch de: ${rawGist(gist,F_INSTR)} (mesmo conteúdo)
 Siga o protocolo: consulte a caixa a cada checkpoint e nunca encerre sem esvaziá-la.`;
 }
 
-/* ============ render ============ */
-function banner(msg,cls){ const b=$('#banner'); if(!msg){b.hidden=true;return;} b.hidden=false; b.className='banner'+(cls?' '+cls:''); b.textContent=msg; }
-function conn(){ const c=$('#conn');
-  if(S.demo){c.textContent='demo';c.className='pill';}
-  else if(S.token&&S.gistId){c.textContent=lastSync?('sinc '+lastSync):'conectado';c.className='pill online';}
-  else{c.textContent='—';c.className='pill';}
+/* ============ GitHub API ============ */
+async function ghApi(path,method,body){
+  await ensureToken();
+  const r=await fetch('https://api.github.com'+path,{
+    method:method||'GET',
+    headers:{Accept:'application/vnd.github+json',Authorization:'token '+BOX_TOKEN,'Content-Type':'application/json'},
+    body:body?JSON.stringify(body):undefined});
+  if(!r.ok){ const t=await r.text(); throw new Error(`GitHub ${r.status}: ${t.slice(0,150)}`); }
+  return r.json();
 }
+async function fetchText(url){
+  const r=await fetch(url);
+  if(!r.ok) throw new Error('HTTP '+r.status);
+  return r.text();
+}
+async function loadBox(){
+  const t=Date.now();
+  const [b,v]=await Promise.all([
+    fetchText(rawGist(S.gist,F_BLOCOS)+'?t='+t),
+    fetchText(rawGist(S.gist,F_VISTO)+'?t='+t).catch(()=>'')
+  ]);
+  S.blocks=parseBlocks(b); S.seen=parseSeen(v);
+}
+async function saveFile(name,content){
+  await ghApi('/gists/'+S.gist,'PATCH',{files:{[name]:{content}}});
+}
+
+/* ============ criação de caixa ============ */
+const ALF='ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+function gerarCodigo(){
+  const p=n=>Array.from({length:n},()=>ALF[Math.floor(Math.random()*ALF.length)]).join('');
+  return p(4)+'-'+p(4);
+}
+async function criarCaixa(){
+  if(!REG_GIST) throw new Error('sistema em configuração — volte mais tarde');
+  let code,gist,tries=0;
+  while(true){
+    code=gerarCodigo();
+    try{ await fetchText(`https://gist.githubusercontent.com/${BOX_LOGIN}/${REG_GIST}/raw/${code}.json`); }
+    catch(e){ break; } /* 404 = código livre */
+    if(++tries>5) throw new Error('não consegui achar código livre, tente de novo');
+  }
+  const g=await ghApi('/gists','POST',{description:'Caixa de Entrada do Agente ('+code+')',public:false,files:{
+    [F_BLOCOS]:{content:'#CAIXA DE ENTRADA — append-only. Nao apague linhas antigas.\n'},
+    [F_VISTO]:{content:'visto ate #0\n'},
+    [F_INSTR]:{content:'(gerando...)'}}});
+  gist=g.id;
+  await ghApi('/gists/'+gist,'PATCH',{files:{[F_INSTR]:{content:buildInstructions(gist,code)}}});
+  await ghApi('/gists/'+REG_GIST,'PATCH',{files:{[code+'.json']:{content:JSON.stringify({g:gist,d:new Date().toISOString().slice(0,10)})}}});
+  return {code,gist};
+}
+async function resolverCodigo(input){
+  const code=(input||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
+  if(code.length!==8) throw new Error('código deve ter 8 caracteres');
+  const fmtCode=code.slice(0,4)+'-'+code.slice(4);
+  let meta;
+  try{ meta=JSON.parse(await fetchText(`https://gist.githubusercontent.com/${BOX_LOGIN}/${REG_GIST}/raw/${fmtCode}.json?t=`+Date.now())); }
+  catch(e){ throw new Error('código não encontrado — confira e tente de novo'); }
+  if(!meta||!meta.g) throw new Error('registro inválido');
+  return {code:fmtCode,gist:meta.g};
+}
+
+/* ============ render ============ */
+function conn(){ /* pill substituída pelo chip de código; mantido p/ compat */ }
 const INBOX_SVG='<svg width="88" height="88" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>';
 function renderBlocks(){
   const box=$('#blocks');
@@ -457,7 +536,7 @@ function renderBlocks(){
          <button class="btn" onclick="cancelEdit()">Cancelar</button></div>`
       : `<div class="texto">${esc(b.text)}</div>`
         + (visto?'':`<div class="acts"><button class="btn" onclick="startEdit(${b.id})">✏️ Editar</button>
-           <button class="btn" onclick="markSeen(${b.id})" title="Marca este bloco e todos os anteriores como vistos">✓ Visto</button></div>`);
+           <button class="btn" onclick="markSeen(${b.id})" title="Marca este bloco e os anteriores como vistos">✓ Visto</button></div>`);
     return `<div class="bloco ${visto?'visto':'novo'}">
       <div class="top"><span class="idchip">#${b.id}</span>
       <span class="meta">${esc(b.ts)}${visto?' · imutável 🔒':''}</span>
@@ -474,35 +553,58 @@ function renderTerminal(){
     const v=b.id<=S.seen;
     return `#${String(b.id).padEnd(3)} | ${b.ts} | ${v?'visto  ✓':'NOVO'+(b.id===prox?'  ◀── pendente':'')}\n     ${b.text}`;
   }).join('\n\n')||'(caixa vazia — nenhuma mensagem ainda)';
-  const head =
+  $('#term-out').textContent =
 `== STATUS AO VIVO ==============================
-gist: ${S.gistId||'—'}   visto ate: #${S.seen}   pendentes: ${pend.length}   blocos: ${S.blocks.length}
+caixa: ${S.code}   visto ate: #${S.seen}   pendentes: ${pend.length}   blocos: ${S.blocks.length}
 ================================================
 
 == BLOCOS (mensagens do operador) ==============
 
 ${linhas}
 
-`;
-  $('#term-out').textContent = head + buildInstructions();
+` + buildInstructions(S.gist,S.code);
 }
-function renderAll(){ conn(); renderBlocks(); renderTerminal(); }
+function renderAll(){ renderBlocks(); renderTerminal(); }
+
+/* ============ navegação / views ============ */
+function showView(v){
+  S.view=v;
+  $('#view-home').hidden = v!=='home';
+  $('#view-box').hidden = v!=='box';
+  $('#view-terminal').hidden = v!=='terminal';
+  const inBox = v!=='home';
+  $('#codechip').hidden=!inBox; $('#btn-refresh').hidden=!inBox; $('#btn-agent').hidden=!inBox;
+  if(inBox) $('#codechip').textContent='caixa '+S.code;
+  banner(null);
+}
+function goHome(){
+  history.replaceState(null,'',siteUrl());
+  showView('home');
+}
+async function openBox(code,opts={}){
+  S.code=code; S.gist=(await resolverCodigo(code)).gist; S.blocks=[]; S.seen=0; S.editId=null;
+  history.replaceState(null,'',boxUrl(code)+(opts.hash||''));
+  try{ await ensureToken(); }catch(e){}
+  try{ await loadBox(); S.demo=false; lastSync=hhmm(); }
+  catch(e){
+    if(e instanceof TypeError||/Failed to fetch|NetworkError/i.test(String(e))){
+      S.demo=true; enterDemo();
+    } else { banner('Erro ao abrir a caixa: '+e.message,'erro'); }
+  }
+  showView(opts.hash==='#terminal'?'terminal':'box');
+  renderAll();
+}
 
 /* ============ ações ============ */
-async function guardDemo(){ if(S.demo){ toast('Modo demo: nada é gravado'); } return S.demo; }
 async function send(){
   const ta=$('#new-text'), text=ta.value.trim(); if(!text){toast('Escreva algo 🙂');return;}
   const id=S.blocks.length?Math.max(...S.blocks.map(b=>b.id))+1:1;
   S.blocks.push({id,ts:fmt(),text});
-  if(await guardDemo()){ ta.value=''; renderAll(); return; }
   $('#btn-send').disabled=true;
-  try{ await saveFile(F_BLOCOS,blocosContent(S.blocks)); ta.value=''; await loadAll(); lastSync=hhmm(); toast('Bloco enviado ✓'); }
+  try{ await saveFile(F_BLOCOS,blocosContent(S.blocks)); ta.value=''; await loadBox(); lastSync=hhmm(); toast('Bloco enviado ✓'); }
   catch(e){
-    S.blocks.pop(); S.editId=null; renderAll();
-    const m401=/401/.test(e.message);
-    banner(m401 ? '🔑 Token inválido, revogado ou incompleto — cole um token válido em ⚙️ e envie de novo.'
-                : 'Erro ao salvar: '+e.message, 'erro');
-    if(m401) openConfig();
+    S.blocks.pop(); renderAll();
+    banner('Erro ao salvar: '+e.message,'erro');
   }
   $('#btn-send').disabled=false; renderAll();
 }
@@ -511,32 +613,30 @@ function cancelEdit(){ S.editId=null; renderBlocks(); }
 async function saveEdit(id){
   if(id<=S.seen){ toast('Bloco já visto 🔒'); return; }
   const nv=$('#ed-'+id).value.trim(); if(!nv){toast('Texto vazio');return;}
-  const b=S.blocks.find(x=>x.id===id); const oldTxt=b.text; b.text=nv;
-  if(await guardDemo()){ S.editId=null; renderAll(); return; }
-  try{ await saveFile(F_BLOCOS,blocosContent(S.blocks)); S.editId=null; await loadAll(); lastSync=hhmm(); toast('Editado ✓'); }
-  catch(e){
-    b.text=oldTxt; S.editId=null; renderAll();
-    const m401=/401/.test(e.message);
-    banner(m401 ? '🔑 Token inválido, revogado ou incompleto — cole um token válido em ⚙️.' : 'Erro ao salvar: '+e.message, 'erro');
-    if(m401) openConfig();
-  }
+  const b=S.blocks.find(x=>x.id===id); const old=b.text; b.text=nv;
+  try{ await saveFile(F_BLOCOS,blocosContent(S.blocks)); S.editId=null; await loadBox(); lastSync=hhmm(); toast('Editado ✓'); }
+  catch(e){ b.text=old; S.editId=null; banner('Erro ao salvar: '+e.message,'erro'); }
   renderAll();
 }
 async function markSeen(id){
   const prev=S.seen; S.seen=Math.max(S.seen,id);
-  if(await guardDemo()){ renderAll(); return; }
-  if(!S.token){ S.seen=prev; renderAll(); toast('Conecte seu token para marcar visto 🔑'); openConfig(); return; }
   try{ await saveFile(F_VISTO,seenContent(S.seen)); lastSync=hhmm(); toast('Marcado como visto ✓'); }
-  catch(e){ banner('Erro ao salvar: '+e.message,'erro'); }
+  catch(e){ S.seen=prev; banner('Erro ao salvar: '+e.message,'erro'); }
   renderAll();
 }
 async function refresh(){
-  if(S.demo||!S.gistId){ renderAll(); return; }
-  try{
-    if(S.token){ await loadAll(); } else { await loadPublic(); }
-    lastSync=hhmm(); banner(null);
-  }catch(e){ banner('Erro ao carregar: '+e.message,'erro'); }
+  if(S.view==='home'||!S.gist){ return; }
+  try{ await loadBox(); lastSync=hhmm(); banner(null); }
+  catch(e){ if(!S.demo) banner('Erro ao atualizar: '+e.message,'erro'); }
   renderAll();
+}
+function enterDemo(){
+  S.blocks=parseBlocks(
+`#1 | ${fmt(new Date(Date.now()-36e5))} | Comece montando a landing page do produto
+#2 | ${fmt(new Date(Date.now()-18e5))} | Use as cores azul e branco
+#3 | ${fmt(new Date(Date.now()-6e5))} | O logo ficou pequeno, aumenta um pouco
+#4 | ${fmt()} | Troca o botão "Comprar" para a cor verde`);
+  S.seen=2; banner('🟡 Sem conexão — MODO DEMONSTRAÇÃO (nada é gravado).');
 }
 
 /* ============ clipboard ============ */
@@ -559,122 +659,65 @@ function applyTheme(t){
   store.set('caixa_tema',t);
 }
 
-/* ============ config / bootstrap ============ */
-function enterDemo(msg){ S.demo=true; S.blocks=parseBlocks(
-`#1 | ${fmt(new Date(Date.now()-36e5))} | Comece montando a landing page do produto
-#2 | ${fmt(new Date(Date.now()-18e5))} | Use as cores azul e branco
-#3 | ${fmt(new Date(Date.now()-6e5))} | O logo ficou pequeno, aumenta um pouco
-#4 | ${fmt()} | Troca o botão "Comprar" para a cor verde`); S.seen=2; banner(msg); }
+/* ============ eventos ============ */
+$('#btn-send').onclick=send;
+$('#new-text').addEventListener('keydown',e=>{ if((e.ctrlKey||e.metaKey)&&e.key==='Enter'){ e.preventDefault(); send(); } });
+$('#btn-refresh').onclick=refresh;
+$('#btn-home').onclick=goHome;
+$('#btn-theme').onclick=()=>applyTheme(S.theme==='dark'?'light':'dark');
+$('#btn-create').onclick=async()=>{
+  const b=$('#btn-create'); b.disabled=true; b.textContent='Criando…';
+  try{
+    const {code,gist}=await criarCaixa();
+    $('#new-code').textContent=code;
+    $('#new-link').value=boxUrl(code);
+    $('#new-msg').value=buildAgentMsg(code,gist);
+    $('#m-created').hidden=false;
+    $('#btn-create').dataset.last=code;
+  }catch(e){ banner('Não deu para criar: '+e.message,'erro'); }
+  b.disabled=false; b.textContent='Criar minha caixa agora';
+};
+$('#code-in').addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); $('#btn-open').click(); } });
+$('#btn-open').onclick=async()=>{
+  try{ $('#btn-open').disabled=true; await openBox($('#code-in').value); $('#code-in').value=''; }
+  catch(e){ toast(e.message); }
+  $('#btn-open').disabled=false;
+};
+$('#msg-copy').onclick=()=>copyText($('#msg-out').value);
+$('#msg-copy-url').onclick=()=>copyText(termUrl(S.code));
+$('#msg-close').onclick=()=>{$('#m-agent').hidden=true;};
+$('#msg-preview').onclick=()=>{ $('#m-agent').hidden=true; showView('terminal'); };
+$('#btn-agent').onclick=()=>{
+  if(!S.gist) return;
+  $('#msg-out').value=buildAgentMsg(S.code,S.gist);
+  $('#box-note').innerHTML=`Código da caixa: <b>${esc(S.code)}</b> · guardado no registro ·
+    blocos: <code>${esc(rawGist(S.gist,F_BLOCOS))}</code> ·
+    visto: <code>${esc(rawGist(S.gist,F_VISTO))}</code>`;
+  $('#m-agent').hidden=false;
+};
+$('#new-copy-link').onclick=()=>copyText($('#new-link').value);
+$('#new-copy-msg').onclick=()=>copyText($('#new-msg').value);
+$('#new-open').onclick=async()=>{ $('#m-created').hidden=true; await openBox($('#btn-create').dataset.last); };
+window.startEdit=startEdit; window.cancelEdit=cancelEdit; window.saveEdit=saveEdit; window.markSeen=markSeen;
+
+/* ============ boot ============ */
 async function boot(){
   const saved=store.get('caixa_tema');
   let pref='light';
   try{ pref = saved || (window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light')||'light'; }catch(e){}
   applyTheme(pref==='dark'?'dark':'light');
-  const net=e=>e instanceof TypeError||/Failed to fetch|NetworkError/i.test(String(e));
-  const tkSalvo=store.get('caixa_token');
-  S.token=tkSalvo||TOKEN_FIXO||null; S.gistId=store.get('caixa_gist');
-  if(S.token&&S.gistId){
-    try{ await loadAll(); lastSync=hhmm(); renderAll(); return; }
+  const params=new URLSearchParams(location.search);
+  const c=params.get('c');
+  if(c){
+    try{ await openBox(c,{hash:location.hash}); }
     catch(e){
-      if(net(e)){ enterDemo('🟡 Sem conexão com o GitHub aqui — MODO DEMONSTRAÇÃO (no site publicado, conecta de verdade).'); renderAll(); return; }
-      if(tkSalvo) store.del('caixa_token'); /* auto-reparo: token salvo inválido */
-      if(TOKEN_FIXO&&S.token!==TOKEN_FIXO){
-        S.token=TOKEN_FIXO;
-        try{ await loadAll(); lastSync=hhmm(); renderAll(); toast('Conectado automaticamente ✓'); return; }
-        catch(e2){ if(net(e2)){ enterDemo('🟡 Sem conexão — MODO DEMONSTRAÇÃO.'); renderAll(); return; } }
-      }
-      S.token=null;
-      banner('Token salvo inválido — seguindo em modo leitura. Aviso: '+(e.message||''),'erro');
+      banner('⚠️ '+e.message,'erro');
+      showView('home');
     }
-  }
-  /* sem configuração neste navegador: usa o Gist pré-configurado do site (modo leitura) */
-  if(!S.gistId&&DONO.gist){ S.gistId=DONO.gist; S.login=DONO.login; S.readonly=!S.token; }
-  if(S.gistId){
-    try{ await loadPublic(); lastSync=hhmm(); renderAll(); return; }
-    catch(e){
-      if(e instanceof TypeError||/Failed to fetch|NetworkError/i.test(String(e))){
-        enterDemo('🟡 Sem conexão com o GitHub aqui — MODO DEMONSTRAÇÃO (os botões funcionam, nada é gravado). No site publicado, abre sua caixa de verdade.'); renderAll(); return; }
-      banner('Erro ao ler a caixa: '+e.message,'erro');
-    }
-  } else enterDemo('🟡 Nada configurado — MODO DEMONSTRAÇÃO. Abra ⚙️ para conectar.');
-  renderAll();
+  } else showView('home');
 }
-function openConfig(){
-  $('#cfg-token').value=S.token||''; $('#cfg-gist').value=S.gistId||DONO.gist||'';
-  $('#cfg-info').innerHTML = S.gistId
-    ? `Gist atual: <b>${esc(S.gistId)}</b><br>instruções do agente (URL que você envia a ele): <code>${esc(rawUrl(F_INSTR))}</code>`
-    : 'Sem Gist conectado. Cole token + clique em “Criar meu Gist”.';
-  $('#m-config').hidden=false;
-}
-async function cfgCreate(){
-  S.token=$('#cfg-token').value.trim();
-  if(!S.token){ toast('Cole o token primeiro'); return; }
-  try{
-    const g=await createGist();
-    store.set('caixa_token',S.token);
-    S.demo=false; banner(null);
-    $('#cfg-gist').value=g.id;
-    try{ await writeInstr(); }catch(e){}
-    $('#cfg-info').innerHTML=`✅ Gist criado: <b>${esc(g.id)}</b> (3 arquivos: blocos, visto, instruções)`;
-    toast('Gist criado ✓');
-    await loadAll(); lastSync=hhmm(); renderAll(); openConfig();
-  }catch(e){ $('#cfg-info').textContent='❌ '+e.message; }
-}
-async function cfgSave(){
-  S.token=$('#cfg-token').value.trim(); S.gistId=$('#cfg-gist').value.trim().replace(/^.*gists\//,'');
-  if(!S.token||!S.gistId){ toast('Preencha token e ID do Gist'); return; }
-  store.set('caixa_token',S.token); store.set('caixa_gist',S.gistId);
-  try{
-    await loadAll();
-    try{ await writeInstr(); }catch(e){}
-    S.demo=false; lastSync=hhmm(); banner(null); $('#m-config').hidden=true; renderAll(); toast('Conectado ✓');
-  }
-  catch(e){ $('#cfg-info').textContent='❌ '+e.message; banner('Erro: '+e.message,'erro'); }
-}
-async function cfgInstr(){
-  if(!S.token||!S.gistId){ toast('Conecte-se primeiro'); return; }
-  if(await guardDemo()) return;
-  try{ await writeInstr(); toast('instrucoes.txt regravado ✓'); }
-  catch(e){ $('#cfg-info').textContent='❌ '+e.message; }
-}
-function openAgentMsg(){
-  $('#msg-out').value=buildTinyMessage();
-  $('#agent-note').innerHTML = S.gistId
-    ? `O link contém: endereços fixos, formato dos blocos, quando consultar, como marcar visto e as regras de decisão. Atualizamos o <code>instrucoes.txt</code> do Gist com esse conteúdo ao conectar.`
-    : `⚠️ Conecte um Gist primeiro (⚙️) — a URL só funciona depois disso.`;
-  $('#m-agent').hidden=false;
-}
-
-/* ============ view ============ */
-function setView(v){
-  const t = v==='terminal';
-  $('#view-visual').hidden = t;
-  $('#view-terminal').hidden = !t;
-  if(t&&location.hash!=='#terminal') history.replaceState(null,'','#terminal');
-  if(!t&&location.hash==='#terminal') history.replaceState(null,'',location.pathname);
-}
-
-/* ============ eventos ============ */
-$('#btn-send').onclick=send;
-$('#new-text').addEventListener('keydown',e=>{ if((e.ctrlKey||e.metaKey)&&e.key==='Enter'){ e.preventDefault(); send(); } });
-$('#btn-refresh').onclick=refresh;
-$('#btn-config').onclick=openConfig;
-$('#btn-agent').onclick=openAgentMsg;
-$('#btn-theme').onclick=()=>applyTheme(S.theme==='dark'?'light':'dark');
-$('#cfg-save').onclick=cfgSave;
-$('#cfg-create').onclick=cfgCreate;
-$('#cfg-instr').onclick=cfgInstr;
-$('#cfg-close').onclick=()=>{$('#m-config').hidden=true;};
-$('#cfg-forget').onclick=()=>{store.del('caixa_token');store.del('caixa_gist');S.token=S.gistId=null;$('#m-config').hidden=true;lastSync=null;enterDemo('Config apagada — modo demo.');renderAll();};
-$('#msg-copy').onclick=()=>copyText($('#msg-out').value);
-$('#msg-copy-url').onclick=()=>copyText(termUrl());
-$('#msg-preview').onclick=()=>{ $('#m-agent').hidden=true; setView('terminal'); };
-$('#msg-close').onclick=()=>{$('#m-agent').hidden=true;};
-window.startEdit=startEdit; window.cancelEdit=cancelEdit; window.saveEdit=saveEdit; window.markSeen=markSeen;
-
-if(location.hash==='#terminal') setView('terminal');
 boot();
-setInterval(()=>{ if(!S.demo&&S.token&&S.gistId&&document.visibilityState==='visible') refresh(); }, 25000);
+setInterval(()=>{ if(S.gist&&!S.demo&&document.visibilityState==='visible') refresh(); }, 25000);
 </script>
 </body>
 </html>
