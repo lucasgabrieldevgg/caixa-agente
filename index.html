@@ -264,6 +264,9 @@
     </div>
   </section>
   <section id="blocks"></section>
+  <div style="text-align:center;margin-top:16px">
+    <button id="btn-delbox" class="btn" style="color:var(--danger);font-size:12.5px;padding:7px 14px" title="Apaga a caixa e TODAS as mensagens — só é possível enquanto o agente não viu nada (visto = 0)">🗑 excluir esta caixa</button>
+  </div>
 </main>
 
 <!-- ══════════ TERMINAL (IA) ══════════ -->
@@ -492,7 +495,8 @@ function renderBlocks(){
          <button class="btn" onclick="cancelEdit()">Cancelar</button></div>`
       : `<div class="texto">${esc(b.text)}</div>`
         + (visto?'':`<div class="acts"><button class="btn" onclick="startEdit(${b.id})">✏️ Editar</button>
-           <button class="btn" onclick="markSeen(${b.id})" title="Marca este bloco e os anteriores como vistos">✓ Visto</button></div>`);
+           <button class="btn" onclick="markSeen(${b.id})" title="Marca este bloco e os anteriores como vistos">✓ Visto</button>
+           <button class="btn" onclick="delBlock(${b.id})" title="Excluir este bloco (só antes do agente ver)">🗑</button></div>`);
     return `<div class="bloco ${visto?'visto':'novo'}">
       <div class="top"><span class="idchip">#${b.id}</span>
       <span class="meta">${esc(b.ts)}${visto?' · imutável 🔒':''}</span>
@@ -593,6 +597,37 @@ async function saveEdit(id){
   }catch(e){ S.editId=null; banner('Erro ao salvar: '+e.message,'erro'); }
   renderAll();
 }
+async function delBlock(id){
+  if(!boxRef){ toast('Sem conexão — modo demo não grava'); return; }
+  if(!confirm(`Excluir o bloco #${id}? Não tem volta.`)) return;
+  try{
+    const res=await boxRef.transaction(cur=>{
+      if(!cur) return undefined;
+      if((cur.visto||0)>=id) return undefined;      /* agente já viu esse bloco -> aborta */
+      const blocks=parseBlocks(cur.blocos||'');
+      if(!blocks.some(x=>x.id===id)) return undefined;
+      cur.blocos=blocosContent(blocks.filter(x=>x.id!==id));
+      return cur;
+    });
+    if(res.committed) toast('Bloco excluído ✓');
+    else toast('O agente acabou de ver esse bloco — exclusão bloqueada 🔒');
+  }catch(e){ banner('Erro ao excluir: '+e.message,'erro'); }
+  renderAll();
+}
+async function delBox(){
+  if(!boxRef) return;
+  if(S.seen>0){ toast('O agente já viu mensagens — a caixa não pode mais ser excluída 🔒'); return; }
+  if(!confirm(`Excluir a caixa ${S.code} e TODAS as mensagens? Não tem volta.`)) return;
+  try{
+    const res=await boxRef.transaction(cur=>{
+      if(!cur) return null;                          /* já não existe */
+      if((cur.visto||0)>0) return undefined;         /* agente já processou algo -> aborta */
+      return null;                                   /* exclui o nó inteiro */
+    });
+    if(res.committed){ boxRef.off(); boxRef=null; toast('Caixa excluída'); goHome(); }
+    else toast('O agente acabou de ver algo — exclusão bloqueada 🔒');
+  }catch(e){ banner('Erro ao excluir: '+e.message,'erro'); }
+}
 async function markSeen(id){
   if(!boxRef){ toast('Sem conexão — modo demo não grava'); return; }
   try{
@@ -666,6 +701,7 @@ $('#btn-open').onclick=async()=>{
   catch(e){ toast(e.message); }
   $('#btn-open').disabled=false;
 };
+$('#btn-delbox').onclick=delBox;
 $('#msg-copy').onclick=()=>copyText($('#msg-out').value);
 $('#msg-copy-url').onclick=()=>copyText(termUrl(S.code));
 $('#msg-close').onclick=()=>{$('#m-agent').hidden=true;};
@@ -679,7 +715,7 @@ $('#btn-agent').onclick=()=>{
 $('#new-copy-link').onclick=()=>copyText($('#new-link').value);
 $('#new-copy-msg').onclick=()=>copyText($('#new-msg').value);
 $('#new-open').onclick=async()=>{ const c=$('#btn-create').dataset.last; $('#m-created').hidden=true; await openBox(c); };
-window.startEdit=startEdit; window.cancelEdit=cancelEdit; window.saveEdit=saveEdit; window.markSeen=markSeen;
+window.startEdit=startEdit; window.cancelEdit=cancelEdit; window.saveEdit=saveEdit; window.markSeen=markSeen; window.delBlock=delBlock;
 
 /* ============ boot ============ */
 async function boot(){
