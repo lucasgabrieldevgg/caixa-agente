@@ -495,7 +495,13 @@ async function send(){
   if(await guardDemo()){ ta.value=''; renderAll(); return; }
   $('#btn-send').disabled=true;
   try{ await saveFile(F_BLOCOS,blocosContent(S.blocks)); ta.value=''; await loadAll(); lastSync=hhmm(); toast('Bloco enviado ✓'); }
-  catch(e){ banner('Erro ao salvar: '+e.message,'erro'); }
+  catch(e){
+    S.blocks.pop(); S.editId=null; renderAll();
+    const m401=/401/.test(e.message);
+    banner(m401 ? '🔑 Token inválido, revogado ou incompleto — cole um token válido em ⚙️ e envie de novo.'
+                : 'Erro ao salvar: '+e.message, 'erro');
+    if(m401) openConfig();
+  }
   $('#btn-send').disabled=false; renderAll();
 }
 function startEdit(id){ if(id<=S.seen){toast('Bloco já visto pela IA — não pode editar 🔒');return;} S.editId=id; renderBlocks(); }
@@ -503,10 +509,15 @@ function cancelEdit(){ S.editId=null; renderBlocks(); }
 async function saveEdit(id){
   if(id<=S.seen){ toast('Bloco já visto 🔒'); return; }
   const nv=$('#ed-'+id).value.trim(); if(!nv){toast('Texto vazio');return;}
-  const b=S.blocks.find(x=>x.id===id); b.text=nv;
+  const b=S.blocks.find(x=>x.id===id); const oldTxt=b.text; b.text=nv;
   if(await guardDemo()){ S.editId=null; renderAll(); return; }
   try{ await saveFile(F_BLOCOS,blocosContent(S.blocks)); S.editId=null; await loadAll(); lastSync=hhmm(); toast('Editado ✓'); }
-  catch(e){ banner('Erro ao salvar: '+e.message,'erro'); }
+  catch(e){
+    b.text=oldTxt; S.editId=null; renderAll();
+    const m401=/401/.test(e.message);
+    banner(m401 ? '🔑 Token inválido, revogado ou incompleto — cole um token válido em ⚙️.' : 'Erro ao salvar: '+e.message, 'erro');
+    if(m401) openConfig();
+  }
   renderAll();
 }
 async function markSeen(id){
