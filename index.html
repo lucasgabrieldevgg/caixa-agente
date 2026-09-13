@@ -267,6 +267,7 @@
   <div style="text-align:center;margin-top:16px">
     <button id="btn-delbox" class="btn" style="color:var(--danger);font-size:12.5px;padding:7px 14px" title="Apaga a caixa e TODAS as mensagens — só é possível enquanto o agente não viu nada (visto = 0)">🗑 excluir esta caixa</button>
   </div>
+  <div style="text-align:center;margin-top:10px;font-size:12px;color:var(--muted)">🕒 As caixas são apagadas automaticamente 7 dias após a última mensagem.</div>
 </main>
 
 <!-- ══════════ TERMINAL (IA) ══════════ -->
@@ -298,7 +299,7 @@
 <div id="m-created" class="modal" hidden>
   <div class="sheet">
     <h2>🎉 Sua caixa está pronta!</h2>
-    <p class="hint">Guarde o <b>código</b> e o <b>link</b> abaixo — eles são o acesso à sua caixa (quem tem o link, usa a caixa).</p>
+    <p class="hint">Guarde o <b>código</b> e o <b>link</b> abaixo — eles são o acesso à sua caixa (quem tem o link, usa a caixa). As caixas são apagadas automaticamente após 7 dias sem novas mensagens.</p>
     <div class="newcode" id="new-code"></div>
     <label>Seu link exclusivo</label>
     <div class="linkbox">
@@ -331,6 +332,7 @@ const FB_CFG={ apiKey:"AIzaSyClWVJPjl8EP2oI6L5dTP7lWuDx1LHgSYI",
   projectId:"caixa-agente" };
 const FB_DB=FB_CFG.databaseURL;
 const HEADER_TXT='#CAIXA DE ENTRADA — append-only. Nao apague linhas antigas.\n';
+const TTL_DIAS=7;   /* caixas são apagadas N dias após a última mensagem (0 = nunca expira) */
 
 /* ============ util ============ */
 const $ = s => document.querySelector(s);
@@ -557,6 +559,11 @@ async function openBox(codeRaw,opts={}){
   if(!snap||!snap.exists()){
     boxRef=null; throw new Error('código não encontrado — confira e tente de novo');
   }
+  const cri=(snap.val()&&snap.val().criado)||0;
+  if(TTL_DIAS>0&&cri&&Date.now()-cri>TTL_DIAS*86400000){
+    boxRef.off(); try{ await boxRef.remove(); }catch(e){}
+    boxRef=null; throw new Error(`esta caixa expirou (apagamos após ${TTL_DIAS} dias sem mensagens) — crie uma nova`);
+  }
   applyVal(snap.val());
   boxRef.on('value', s=>{ if(applyVal(s.val())&&!S.editId) renderAll(); });
   showView(opts.hash==='#terminal'?'terminal':'box');
@@ -575,7 +582,7 @@ async function send(){
       blocks.push({id,ts:fmt(),text});
       return blocosContent(blocks);
     });
-    if(res.committed){ ta.value=''; toast('Bloco enviado ✓'); }
+    if(res.committed){ ta.value=''; boxRef.child('criado').set(Date.now()).catch(()=>{}); toast('Bloco enviado ✓'); }
     else toast('Não consegui salvar — tente de novo');
   }catch(e){ banner('Erro ao salvar: '+e.message,'erro'); }
   $('#btn-send').disabled=false; renderAll();
@@ -592,7 +599,7 @@ async function saveEdit(id){
       const b=blocks.find(x=>x.id===id); if(!b) return;
       b.text=nv; return blocosContent(blocks);
     });
-    if(res.committed){ S.editId=null; toast('Editado ✓'); }
+    if(res.committed){ S.editId=null; boxRef.child('criado').set(Date.now()).catch(()=>{}); toast('Editado ✓'); }
     else toast('Não consegui salvar — tente de novo');
   }catch(e){ S.editId=null; banner('Erro ao salvar: '+e.message,'erro'); }
   renderAll();
