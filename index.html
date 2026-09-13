@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#f4f6fb">
 <title>Caixa de Entrada do Agente</title>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <style>
   :root{
     --bg:#f4f6fb; --card:#ffffff; --ink:#101728; --muted:#64748b;
@@ -63,6 +65,8 @@
   .icon:active{transform:translateY(0)}
   .codechip{font:600 12.5px ui-monospace,Menlo,Consolas,monospace;color:var(--muted);
     border:1px dashed var(--line2);border-radius:999px;padding:6px 12px;white-space:nowrap;background:var(--card)}
+  .live{font-size:11px;font-weight:700;color:var(--ok);display:inline-flex;align-items:center;gap:5px}
+  .live::before{content:"";width:6px;height:6px;border-radius:99px;background:var(--ok);animation:pulse2 1.8s ease infinite}
   @media (max-width:700px){ .brand .sub,.codechip{display:none} }
   @media (max-width:430px){ .logo{width:34px;height:34px} }
 
@@ -204,6 +208,7 @@
   </button>
   <div class="hbtns">
     <span id="codechip" class="codechip" hidden></span>
+    <span id="livechip" class="live" hidden>AO VIVO</span>
     <button id="btn-refresh" class="icon" title="Recarregar" aria-label="Recarregar" hidden>
       <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
     </button>
@@ -216,7 +221,7 @@
 
 <div id="banner" class="banner" hidden></div>
 
-<!-- ══════════ HOME: criar ou abrir caixa ══════════ -->
+<!-- ══════════ HOME ══════════ -->
 <main id="view-home">
   <div class="hero">
     <div class="logo" style="margin:0 auto;width:52px;height:52px;border-radius:15px">
@@ -268,7 +273,7 @@
   </main>
 </div>
 
-<!-- modal: mensagem para o agente + dados da caixa -->
+<!-- modal: mensagem para o agente -->
 <div id="m-agent" class="modal" hidden>
   <div class="sheet">
     <h2>🤖 Mensagem para o agente</h2>
@@ -311,26 +316,18 @@
 <script>
 "use strict";
 /* ═══════════════════════════════════════════════════════════════
-   INFRA-CONFIG (fixa, mantida pelo dono do site)
-   - BOX_TOKEN: token classic de escopo APENAS 'gist' de uma conta
-     dedicada a caixas (conta-fantasma). Não dá acesso a repositórios
-     nem a nenhuma outra conta — só a gists dessa conta de serviço.
-   - REG_GIST: gist "registro" que mapeia CÓDIGO → gist da caixa.
+   INFRA: Firebase Realtime Database (plano grátis, sem segredos —
+   a segurança vem das REGRAS do banco, não de tokens).
+   Estrutura:  boxes/{CODIGO}/{blocos:string, visto:number, criado:number}
+   - blocos: string append-only, linhas "#N | data | texto"
+   - visto : número — a memória da IA ("tudo até #N já foi processado")
    ═══════════════════════════════════════════════════════════════ */
-const BOX_LOGIN='carlosdevgg';
-const REG_GIST='c147ad8296a0047bd33de928a1f33d1c';
-/* Token de escrita NÃO fica no código (push protection do GitHub bloqueia e escaneia):
-   o site busca do COFRE — arquivo site.key no gist do registro — em tempo de execução. */
-let BOX_TOKEN='';
-let _boxTokenPromise=null;
-function ensureToken(){
-  if(BOX_TOKEN) return Promise.resolve(BOX_TOKEN);
-  if(!_boxTokenPromise) _boxTokenPromise=
-    fetchText(`https://gist.githubusercontent.com/${BOX_LOGIN}/${REG_GIST}/raw/site.key?t=`+Date.now())
-      .then(t=>{ BOX_TOKEN=(t||'').trim(); if(!BOX_TOKEN) throw new Error('cofre vazio'); return BOX_TOKEN; })
-      .catch(e=>{ _boxTokenPromise=null; throw e; });
-  return _boxTokenPromise;
-}
+const FB_CFG={ apiKey:"AIzaSyClWVJPjl8EP2oI6L5dTP7lWuDx1LHgSYI",
+  authDomain:"caixa-agente.firebaseapp.com",
+  databaseURL:"https://caixa-agente-default-rtdb.firebaseio.com",
+  projectId:"caixa-agente" };
+const FB_DB=FB_CFG.databaseURL;
+const HEADER_TXT='#CAIXA DE ENTRADA — append-only. Nao apague linhas antigas.\n';
 
 /* ============ util ============ */
 const $ = s => document.querySelector(s);
@@ -338,7 +335,6 @@ const esc = s => s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;',
 function toast(msg){ const t=$('#toast'); t.textContent=msg; t.classList.add('on'); setTimeout(()=>t.classList.remove('on'),2400); }
 function fmt(d=new Date()){ const p=n=>String(n).padStart(2,'0');
   return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`; }
-function hhmm(d=new Date()){ const p=n=>String(n).padStart(2,'0'); return p(d.getHours())+':'+p(d.getMinutes()); }
 function banner(msg,cls){ const b=$('#banner'); if(!msg){b.hidden=true;return;} b.hidden=false; b.className='banner'+(cls?' '+cls:''); b.textContent=msg; }
 const mem={};
 const store={
@@ -346,17 +342,18 @@ const store={
   set(k,v){ try{localStorage.setItem(k,v);}catch(e){mem[k]=v;} },
   del(k){ try{localStorage.removeItem(k);}catch(e){delete mem[k];} }
 };
-
-/* ============ estado ============ */
-const S={ blocks:[], seen:0, code:null, gist:null, created:null, editId:null, theme:'light', view:'home', demo:false };
-const F_BLOCOS='blocos.txt', F_VISTO='visto.txt', F_INSTR='instrucoes.txt';
-let lastSync=null;
 const siteUrl=()=>location.origin+location.pathname;
 function boxUrl(code){ return siteUrl()+'?c='+code; }
 function termUrl(code){ return siteUrl()+'?c='+code+'#terminal'; }
-function rawGist(gist,file){ return `https://gist.githubusercontent.com/${BOX_LOGIN||'USER'}/${gist}/raw/${file}`; }
+function blocosUrl(code){ return `${FB_DB}/boxes/${code}/blocos.json`; }
+function vistoUrl(code){ return `${FB_DB}/boxes/${code}/visto.json`; }
 
-/* ============ parse ============ */
+/* ============ estado ============ */
+const S={ blocks:[], seen:0, code:null, demo:false, editId:null, theme:'light', view:'home' };
+let db=null, boxRef=null;
+const netErr=e=>e instanceof TypeError||/network|offline|Failed to fetch|permission_denied|unavailable/i.test(String(e&&e.message||e));
+
+/* ============ parse (formato igual ao de sempre) ============ */
 function parseBlocks(txt){
   const out=[];
   for(const line of (txt||'').split('\n')){
@@ -365,19 +362,45 @@ function parseBlocks(txt){
   }
   return out;
 }
-function parseSeen(txt){ const m=(txt||'').match(/visto\s+ate\s*#(\d+)/i); return m?+m[1]:0; }
+function parseSeenLine(v){ return (typeof v==='number'&&v>=0)?v:0; }
 function blocosContent(blocks){
-  return '#CAIXA DE ENTRADA — append-only. Nao apague linhas antigas.\n'
-    + blocks.map(b=>`#${b.id} | ${b.ts} | ${b.text}`).join('\n') + '\n';
+  return HEADER_TXT + blocks.map(b=>`#${b.id} | ${b.ts} | ${b.text}`).join('\n') + '\n';
 }
-function seenContent(n){ return `visto ate #${n}\n`; }
 function pendentes(){ return S.blocks.filter(b=>b.id>S.seen); }
+function normalizeCode(input){ return (input||'').toUpperCase().replace(/[^A-Z0-9]/g,''); }
+function fmtCode(c){ return c.slice(0,4)+'-'+c.slice(4); }
 
-/* ============ instruções da caixa (gravadas no gist na criação) ============ */
-function buildInstructions(gist,code){
-  const tk = BOX_TOKEN || 'SEU_TOKEN';
-  const curl=`curl -X PATCH -H "Authorization: token ${tk}" https://api.github.com/gists/${gist} -d '{"files":{"visto.txt":{"content":"visto ate #N"}}}'`;
-  const gh=`gh api gists/${gist} -X PATCH -f 'files[visto.txt][content]=visto ate #N'`;
+/* ============ firebase ============ */
+function fbInit(){
+  try{ if(typeof firebase==='undefined') return false;
+    firebase.initializeApp(FB_CFG); db=firebase.database(); return true;
+  }catch(e){ return false; }
+}
+function applyVal(v){
+  if(!v) return false;
+  const b=parseBlocks(typeof v.blocos==='string'?v.blocos:'');
+  const seen=parseSeenLine(v.visto);
+  const changed=JSON.stringify([b,seen])!==JSON.stringify([S.blocks,S.seen]);
+  S.blocks=b; S.seen=seen;
+  return changed;
+}
+async function criarCaixaFB(){
+  if(!db) throw new Error('banco indisponível (sem internet?)');
+  let code,tries=0;
+  while(true){
+    code=gerarCodigo();
+    const res=await db.ref('boxes/'+code).transaction(cur=>{
+      if(cur) return;                       /* código ocupado → tenta outro */
+      return {blocos:HEADER_TXT, visto:0, criado:Date.now()};
+    });
+    if(res.committed) break;
+    if(++tries>5) throw new Error('não consegui achar código livre, tente de novo');
+  }
+  return {code};
+}
+
+/* ============ instruções da caixa ============ */
+function buildInstructions(code){
 return `================================================================
 CAIXA DE ENTRADA DO AGENTE (código ${code}) — PROTOCOLO OFICIAL
 ================================================================
@@ -385,28 +408,24 @@ Seu OPERADOR HUMANO envia instruções para você por aqui, a
 qualquer momento, SEM interromper sua execução. Este documento
 é a fonte oficial das regras. Consulte-o a cada checkpoint.
 
--- ENDEREÇOS (fixos, valem para sempre) ------------------------
-BLOCOS  (instruções do operador):
-  ${rawGist(gist,F_BLOCOS)}
-VISTO   (sua memória de progresso):
-  ${rawGist(gist,F_VISTO)}
+-- ENDEREÇOS (fixos, valem para sempre; sem token, sem login) --
+BLOCOS  (instruções do operador) — GET devolve a string inteira:
+  ${blocosUrl(code)}
+VISTO   (sua memória de progresso) — GET devolve um número:
+  ${vistoUrl(code)}
 Painel do operador (só para humanos, você não precisa):
   ${termUrl(code)}
 
-Ao ler qualquer URL acima, acrescente "?t=<data-hora-atual>"
-para evitar cache.
-
 -- FORMATO -----------------------------------------------------
-blocos.txt é append-only; cada instrução é uma linha
+blocos é uma string; cada instrução é uma linha
   #N | data hora | texto
 Números maiores = mais recentes.
-visto.txt contém uma linha "visto ate #N": tudo com id <= N
-já foi processado por você. Esse arquivo é a SUA memória entre
-sessões — comece toda sessão lendo-o.
+visto é um número: tudo com id <= visto já foi processado por
+você. Ele é a SUA memória entre sessões — comece toda sessão
+lendo visto e blocos, e monte os pendentes (id > visto).
 
 -- QUANDO CONSULTAR A CAIXA ------------------------------------
-1. INÍCIO: leia os dois arquivos e monte os pendentes (id >
-   último visto).
+1. INÍCIO: leia os dois endereços e monte os pendentes.
 2. CHECKPOINT PERIÓDICO: a cada ~5 passos concluídos (ou ~10
    minutos), releia a caixa.
 3. CHECKPOINT FINAL OBRIGATÓRIO (esvaziamento): ao terminar a
@@ -417,10 +436,10 @@ sessões — comece toda sessão lendo-o.
    quando a tarefa termina.
 
 -- COMO MARCAR VISTO (escreva a palavra "visto") ---------------
-Depois de CONCLUIR os pendentes, grave o maior id processado
-em visto.txt com UM destes comandos (o que houver no ambiente):
-  curl: ${curl}
-  gh:   ${gh}
+Depois de CONCLUIR os pendentes, faça um PUT do número no
+endereço do visto (qualquer cliente HTTP serve; sem token):
+  curl -X PUT "${vistoUrl(code)}" -H "Content-Type: application/json" -d "N"
+(onde N é o maior id que você concluiu, ex.: -d "6")
 Fluxo por checkpoint: executar pendentes -> marcar visto ->
 reler -> decidir.
 
@@ -450,77 +469,14 @@ morre por causa da caixa.
 ================================================================
 `;
 }
-function buildAgentMsg(code,gist){
+function buildAgentMsg(code){
 return `Você tem uma CAIXA DE ENTRADA por onde eu envio instruções a qualquer momento, sem interromper seu trabalho.
 1) Leia agora o protocolo completo (vale para sempre): ${termUrl(code)}
-2) Se você só consegue ler texto puro, faça fetch de: ${rawGist(gist,F_INSTR)} (mesmo conteúdo)
+2) Se você só lê texto puro: seus blocos estão em ${blocosUrl(code)} e sua memória em ${vistoUrl(code)}
 Siga o protocolo: consulte a caixa a cada checkpoint e nunca encerre sem esvaziá-la.`;
 }
 
-/* ============ GitHub API ============ */
-async function ghApi(path,method,body){
-  await ensureToken();
-  const r=await fetch('https://api.github.com'+path,{
-    method:method||'GET',
-    headers:{Accept:'application/vnd.github+json',Authorization:'token '+BOX_TOKEN,'Content-Type':'application/json'},
-    body:body?JSON.stringify(body):undefined});
-  if(!r.ok){ const t=await r.text(); throw new Error(`GitHub ${r.status}: ${t.slice(0,150)}`); }
-  return r.json();
-}
-async function fetchText(url){
-  const r=await fetch(url);
-  if(!r.ok) throw new Error('HTTP '+r.status);
-  return r.text();
-}
-async function loadBox(){
-  const t=Date.now();
-  const [b,v]=await Promise.all([
-    fetchText(rawGist(S.gist,F_BLOCOS)+'?t='+t),
-    fetchText(rawGist(S.gist,F_VISTO)+'?t='+t).catch(()=>'')
-  ]);
-  S.blocks=parseBlocks(b); S.seen=parseSeen(v);
-}
-async function saveFile(name,content){
-  await ghApi('/gists/'+S.gist,'PATCH',{files:{[name]:{content}}});
-}
-
-/* ============ criação de caixa ============ */
-const ALF='ABCDEFGHJKMNPQRSTUVWXYZ23456789';
-function gerarCodigo(){
-  const p=n=>Array.from({length:n},()=>ALF[Math.floor(Math.random()*ALF.length)]).join('');
-  return p(4)+'-'+p(4);
-}
-async function criarCaixa(){
-  if(!REG_GIST) throw new Error('sistema em configuração — volte mais tarde');
-  let code,gist,tries=0;
-  while(true){
-    code=gerarCodigo();
-    try{ await fetchText(`https://gist.githubusercontent.com/${BOX_LOGIN}/${REG_GIST}/raw/${code}.json`); }
-    catch(e){ break; } /* 404 = código livre */
-    if(++tries>5) throw new Error('não consegui achar código livre, tente de novo');
-  }
-  const g=await ghApi('/gists','POST',{description:'Caixa de Entrada do Agente ('+code+')',public:false,files:{
-    [F_BLOCOS]:{content:'#CAIXA DE ENTRADA — append-only. Nao apague linhas antigas.\n'},
-    [F_VISTO]:{content:'visto ate #0\n'},
-    [F_INSTR]:{content:'(gerando...)'}}});
-  gist=g.id;
-  await ghApi('/gists/'+gist,'PATCH',{files:{[F_INSTR]:{content:buildInstructions(gist,code)}}});
-  await ghApi('/gists/'+REG_GIST,'PATCH',{files:{[code+'.json']:{content:JSON.stringify({g:gist,d:new Date().toISOString().slice(0,10)})}}});
-  return {code,gist};
-}
-async function resolverCodigo(input){
-  const code=(input||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
-  if(code.length!==8) throw new Error('código deve ter 8 caracteres');
-  const fmtCode=code.slice(0,4)+'-'+code.slice(4);
-  let meta;
-  try{ meta=JSON.parse(await fetchText(`https://gist.githubusercontent.com/${BOX_LOGIN}/${REG_GIST}/raw/${fmtCode}.json?t=`+Date.now())); }
-  catch(e){ throw new Error('código não encontrado — confira e tente de novo'); }
-  if(!meta||!meta.g) throw new Error('registro inválido');
-  return {code:fmtCode,gist:meta.g};
-}
-
 /* ============ render ============ */
-function conn(){ /* pill substituída pelo chip de código; mantido p/ compat */ }
 const INBOX_SVG='<svg width="88" height="88" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>';
 function renderBlocks(){
   const box=$('#blocks');
@@ -562,7 +518,7 @@ caixa: ${S.code}   visto ate: #${S.seen}   pendentes: ${pend.length}   blocos: $
 
 ${linhas}
 
-` + buildInstructions(S.gist,S.code);
+` + buildInstructions(S.code);
 }
 function renderAll(){ renderBlocks(); renderTerminal(); }
 
@@ -573,24 +529,32 @@ function showView(v){
   $('#view-box').hidden = v!=='box';
   $('#view-terminal').hidden = v!=='terminal';
   const inBox = v!=='home';
-  $('#codechip').hidden=!inBox; $('#btn-refresh').hidden=!inBox; $('#btn-agent').hidden=!inBox;
+  $('#codechip').hidden=!inBox; $('#btn-refresh').hidden=!inBox; $('#btn-agent').hidden=!inBox; $('#livechip').hidden=!inBox||S.demo;
   if(inBox) $('#codechip').textContent='caixa '+S.code;
   banner(null);
 }
 function goHome(){
+  if(boxRef){ boxRef.off(); boxRef=null; }
   history.replaceState(null,'',siteUrl());
   showView('home');
 }
-async function openBox(code,opts={}){
-  S.code=code; S.gist=(await resolverCodigo(code)).gist; S.blocks=[]; S.seen=0; S.editId=null;
-  history.replaceState(null,'',boxUrl(code)+(opts.hash||''));
-  try{ await ensureToken(); }catch(e){}
-  try{ await loadBox(); S.demo=false; lastSync=hhmm(); }
-  catch(e){
-    if(e instanceof TypeError||/Failed to fetch|NetworkError/i.test(String(e))){
-      S.demo=true; enterDemo();
-    } else { banner('Erro ao abrir a caixa: '+e.message,'erro'); }
+async function openBox(codeRaw,opts={}){
+  const code=normalizeCode(codeRaw);
+  if(code.length!==8) throw new Error('código deve ter 8 caracteres');
+  const fcode=fmtCode(code);
+  if(!db){ enterDemo(); S.code=fcode; showView(opts.hash==='#terminal'?'terminal':'box'); renderAll(); return; }
+  if(boxRef) boxRef.off();
+  S.code=fcode; S.blocks=[]; S.seen=0; S.editId=null; S.demo=false;
+  history.replaceState(null,'',boxUrl(fcode)+(opts.hash||''));
+  boxRef=db.ref('boxes/'+fcode);
+  let snap;
+  try{ snap=await boxRef.once('value'); }
+  catch(e){ enterDemo(); showView(opts.hash==='#terminal'?'terminal':'box'); renderAll(); return; }
+  if(!snap||!snap.exists()){
+    boxRef=null; throw new Error('código não encontrado — confira e tente de novo');
   }
+  applyVal(snap.val());
+  boxRef.on('value', s=>{ if(applyVal(s.val())&&!S.editId) renderAll(); });
   showView(opts.hash==='#terminal'?'terminal':'box');
   renderAll();
 }
@@ -598,14 +562,18 @@ async function openBox(code,opts={}){
 /* ============ ações ============ */
 async function send(){
   const ta=$('#new-text'), text=ta.value.trim(); if(!text){toast('Escreva algo 🙂');return;}
-  const id=S.blocks.length?Math.max(...S.blocks.map(b=>b.id))+1:1;
-  S.blocks.push({id,ts:fmt(),text});
+  if(!boxRef){ toast('Sem conexão — modo demo não grava'); return; }
   $('#btn-send').disabled=true;
-  try{ await saveFile(F_BLOCOS,blocosContent(S.blocks)); ta.value=''; await loadBox(); lastSync=hhmm(); toast('Bloco enviado ✓'); }
-  catch(e){
-    S.blocks.pop(); renderAll();
-    banner('Erro ao salvar: '+e.message,'erro');
-  }
+  try{
+    const res=await boxRef.child('blocos').transaction(cur=>{
+      const blocks=parseBlocks(cur||HEADER_TXT);
+      const id=blocks.length?Math.max(...blocks.map(b=>b.id))+1:1;
+      blocks.push({id,ts:fmt(),text});
+      return blocosContent(blocks);
+    });
+    if(res.committed){ ta.value=''; toast('Bloco enviado ✓'); }
+    else toast('Não consegui salvar — tente de novo');
+  }catch(e){ banner('Erro ao salvar: '+e.message,'erro'); }
   $('#btn-send').disabled=false; renderAll();
 }
 function startEdit(id){ if(id<=S.seen){toast('Bloco já visto pela IA — não pode editar 🔒');return;} S.editId=id; renderBlocks(); }
@@ -613,30 +581,38 @@ function cancelEdit(){ S.editId=null; renderBlocks(); }
 async function saveEdit(id){
   if(id<=S.seen){ toast('Bloco já visto 🔒'); return; }
   const nv=$('#ed-'+id).value.trim(); if(!nv){toast('Texto vazio');return;}
-  const b=S.blocks.find(x=>x.id===id); const old=b.text; b.text=nv;
-  try{ await saveFile(F_BLOCOS,blocosContent(S.blocks)); S.editId=null; await loadBox(); lastSync=hhmm(); toast('Editado ✓'); }
-  catch(e){ b.text=old; S.editId=null; banner('Erro ao salvar: '+e.message,'erro'); }
+  if(!boxRef){ toast('Sem conexão — modo demo não grava'); return; }
+  try{
+    const res=await boxRef.child('blocos').transaction(cur=>{
+      const blocks=parseBlocks(cur||'');
+      const b=blocks.find(x=>x.id===id); if(!b) return;
+      b.text=nv; return blocosContent(blocks);
+    });
+    if(res.committed){ S.editId=null; toast('Editado ✓'); }
+    else toast('Não consegui salvar — tente de novo');
+  }catch(e){ S.editId=null; banner('Erro ao salvar: '+e.message,'erro'); }
   renderAll();
 }
 async function markSeen(id){
-  const prev=S.seen; S.seen=Math.max(S.seen,id);
-  try{ await saveFile(F_VISTO,seenContent(S.seen)); lastSync=hhmm(); toast('Marcado como visto ✓'); }
-  catch(e){ S.seen=prev; banner('Erro ao salvar: '+e.message,'erro'); }
+  if(!boxRef){ toast('Sem conexão — modo demo não grava'); return; }
+  try{
+    const res=await boxRef.child('visto').transaction(cur=>Math.max(cur||0,id));
+    if(res.committed) toast('Marcado como visto ✓');
+  }catch(e){ banner('Erro ao salvar: '+e.message,'erro'); }
   renderAll();
 }
 async function refresh(){
-  if(S.view==='home'||!S.gist){ return; }
-  try{ await loadBox(); lastSync=hhmm(); banner(null); }
-  catch(e){ if(!S.demo) banner('Erro ao atualizar: '+e.message,'erro'); }
-  renderAll();
+  if(!boxRef||S.demo) return;
+  try{ const s=await boxRef.once('value'); if(applyVal(s.val())) renderAll(); banner(null); }
+  catch(e){ banner('Erro ao atualizar: '+e.message,'erro'); }
 }
 function enterDemo(){
-  S.blocks=parseBlocks(
+  S.demo=true; S.blocks=parseBlocks(
 `#1 | ${fmt(new Date(Date.now()-36e5))} | Comece montando a landing page do produto
 #2 | ${fmt(new Date(Date.now()-18e5))} | Use as cores azul e branco
 #3 | ${fmt(new Date(Date.now()-6e5))} | O logo ficou pequeno, aumenta um pouco
 #4 | ${fmt()} | Troca o botão "Comprar" para a cor verde`);
-  S.seen=2; banner('🟡 Sem conexão — MODO DEMONSTRAÇÃO (nada é gravado).');
+  S.seen=2; banner('🟡 Sem conexão com o banco — MODO DEMONSTRAÇÃO (nada é gravado). No site publicado, funciona de verdade.');
 }
 
 /* ============ clipboard ============ */
@@ -659,6 +635,13 @@ function applyTheme(t){
   store.set('caixa_tema',t);
 }
 
+/* ============ código ============ */
+const ALF='ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+function gerarCodigo(){
+  const p=n=>Array.from({length:n},()=>ALF[Math.floor(Math.random()*ALF.length)]).join('');
+  return p(4)+'-'+p(4);
+}
+
 /* ============ eventos ============ */
 $('#btn-send').onclick=send;
 $('#new-text').addEventListener('keydown',e=>{ if((e.ctrlKey||e.metaKey)&&e.key==='Enter'){ e.preventDefault(); send(); } });
@@ -668,12 +651,12 @@ $('#btn-theme').onclick=()=>applyTheme(S.theme==='dark'?'light':'dark');
 $('#btn-create').onclick=async()=>{
   const b=$('#btn-create'); b.disabled=true; b.textContent='Criando…';
   try{
-    const {code,gist}=await criarCaixa();
+    const {code}=await criarCaixaFB();
     $('#new-code').textContent=code;
     $('#new-link').value=boxUrl(code);
-    $('#new-msg').value=buildAgentMsg(code,gist);
+    $('#new-msg').value=buildAgentMsg(code);
     $('#m-created').hidden=false;
-    $('#btn-create').dataset.last=code;
+    b.dataset.last=code;
   }catch(e){ banner('Não deu para criar: '+e.message,'erro'); }
   b.disabled=false; b.textContent='Criar minha caixa agora';
 };
@@ -688,16 +671,14 @@ $('#msg-copy-url').onclick=()=>copyText(termUrl(S.code));
 $('#msg-close').onclick=()=>{$('#m-agent').hidden=true;};
 $('#msg-preview').onclick=()=>{ $('#m-agent').hidden=true; showView('terminal'); };
 $('#btn-agent').onclick=()=>{
-  if(!S.gist) return;
-  $('#msg-out').value=buildAgentMsg(S.code,S.gist);
-  $('#box-note').innerHTML=`Código da caixa: <b>${esc(S.code)}</b> · guardado no registro ·
-    blocos: <code>${esc(rawGist(S.gist,F_BLOCOS))}</code> ·
-    visto: <code>${esc(rawGist(S.gist,F_VISTO))}</code>`;
+  if(!S.code) return;
+  $('#msg-out').value=buildAgentMsg(S.code);
+  $('#box-note').innerHTML=`Código da caixa: <b>${esc(S.code)}</b> · blocos (raw p/ agentes): <code>${esc(blocosUrl(S.code))}</code> · visto: <code>${esc(vistoUrl(S.code))}</code>`;
   $('#m-agent').hidden=false;
 };
 $('#new-copy-link').onclick=()=>copyText($('#new-link').value);
 $('#new-copy-msg').onclick=()=>copyText($('#new-msg').value);
-$('#new-open').onclick=async()=>{ $('#m-created').hidden=true; await openBox($('#btn-create').dataset.last); };
+$('#new-open').onclick=async()=>{ const c=$('#btn-create').dataset.last; $('#m-created').hidden=true; await openBox(c); };
 window.startEdit=startEdit; window.cancelEdit=cancelEdit; window.saveEdit=saveEdit; window.markSeen=markSeen;
 
 /* ============ boot ============ */
@@ -706,18 +687,16 @@ async function boot(){
   let pref='light';
   try{ pref = saved || (window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light')||'light'; }catch(e){}
   applyTheme(pref==='dark'?'dark':'light');
+  const ok=fbInit();
   const params=new URLSearchParams(location.search);
   const c=params.get('c');
   if(c){
     try{ await openBox(c,{hash:location.hash}); }
-    catch(e){
-      banner('⚠️ '+e.message,'erro');
-      showView('home');
-    }
+    catch(e){ banner('⚠️ '+e.message,'erro'); showView('home'); }
   } else showView('home');
+  if(!ok&&!c) banner('🟡 Sem conexão com o banco aqui — ao abrir uma caixa entrará em modo demonstração. No site publicado, tudo funciona.','erro');
 }
 boot();
-setInterval(()=>{ if(S.gist&&!S.demo&&document.visibilityState==='visible') refresh(); }, 25000);
 </script>
 </body>
 </html>
