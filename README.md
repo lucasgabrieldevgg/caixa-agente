@@ -93,6 +93,13 @@ O protocolo completo vive no terminal (`#terminal`) — este é o resumo:
 4. **Anti-travamento:** consultar a caixa nunca é desculpa para esperar em loop;
 5. **Resiliência:** caixa fora do ar nunca derruba a tarefa.
 
+## 🕒 Retenção de dados (as caixas não ficam para sempre)
+
+- **TTL: 7 dias após a última mensagem** — caixa ativa nunca expira; abandonada é apagada;
+- Duas camadas: (1) abrir caixa vencida apaga-a na hora; (2) GitHub Action `Limpeza de caixas antigas` varre o banco **todo dia** e remove as vencidas;
+- **Privacidade por design**: instruções executadas são lixo — aqui elas se autodestroem;
+- Para mudar o prazo: `TTL_DIAS` no `index.html` + variável no workflow.
+
 ## 🔒 Segurança e isolamento
 
 - **Nenhum segredo no site** — a proteção vem das regras do banco, não de tokens (nada pra vazar);
