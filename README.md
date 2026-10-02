@@ -4,7 +4,7 @@
 
 > Envie mensagens e instruções para o seu agente de IA **enquanto ele executa a tarefa** — sem interromper, sem pausar, sem refazer prompt. Ele lê no próximo checkpoint, incorpora e te confirma marcando como **visto**.
 
-[![site](https://img.shields.io/badge/site-github.io-4f6df5)](https://lucasgabrieldevgg.github.io/caixa-agente) [![banco](https://img.shields.io/badge/banco-firebase%20gr%C3%A1tis-ffca28)](https://firebase.google.com) [![segredo](https://img.shields.io/badge/segredos-zero-16a34a)](#-arquitetura) [![custo](https://img.shields.io/badge/custo-R%24%200-success)](#)
+[![ci](https://github.com/lucasgabrieldevgg/caixa-agente/actions/workflows/ci.yml/badge.svg)](https://github.com/lucasgabrieldevgg/caixa-agente/actions/workflows/ci.yml) [![site](https://img.shields.io/badge/site-github.io-186b3d)](https://lucasgabrieldevgg.github.io/caixa-agente) [![banco](https://img.shields.io/badge/banco-firebase%20gr%C3%A1tis-ffca28)](https://firebase.google.com) [![segredo](https://img.shields.io/badge/segredos-zero-16a34a)](#-arquitetura) [![custo](https://img.shields.io/badge/custo-R%24%200-success)](#)
 
 ---
 
@@ -108,11 +108,34 @@ O protocolo completo vive no terminal (`#terminal`) — este é o resumo:
 - **Caixas não se misturam** — cada código é um nó isolado; blocos, visto e memória nunca cruzam;
 - Não escreva segredos (senhas, chaves de API) nos blocos — use referências ("use a chave do meu arquivo X").
 
+## 🎨 Identidade — ESTAÇÃO TELETYPE (operação CRA)
+
+Zero cara-de-IA: nada de gradiente roxo-lavanda, glow radial, vidro fosco ou Inter. Aqui a estação tem cara do que ela é:
+
+- **Claro = papel de telégrafo** (creme `#ece6d6`, tinta `#211d12`, sombras duras deslocadas — recibo de teletipo);
+- **Escuro = CRT de fósforo verde** (`#12140f` + verde `#3ee07a`, scanlines sutis de textura hard-stop);
+- **VT323** no display (títulos tipo terminal vintage) · **IBM Plex Mono** no corpo (monoespaçada de verdade, já que o produto vive de `#N | data | texto`);
+- Tarja âmbar = bloco **NOVO** · tarja verde = **VISTO** (a fita anda, a linha fica aberta);
+- Índice da paleta e componentes no topo do `index.html` (comentário `ESTAÇÃO TELETYPE`).
+
+## 🧪 Testes
+
+```
+npm install && npm test
+```
+
+**41 checks** rodam em jsdom **sem rede e sem Firebase** (o app cai no modo demonstração sozinho): formato do protocolo (`#N | data | texto`, visto, pendências), códigos `XXXX-XXXX` sem caracteres ambíguos, endereços REST, protocolo gerado pro agente, render de blocos/terminal, tema persistente, escape de HTML — e a **guarda anti-vibe**: se alguém reintroduzir gradiente com transição, glow radial, roxo de IA, título-gradiente, bolinha piscando ou segredo real, a suíte quebra no CI.
+
 ## 📄 Arquivos
 
 | Arquivo | O que é |
 |---|---|
 | `index.html` | O site inteiro (home, painel visual, terminal, lógica Firebase) |
+| `tests/cra_test.cjs` | Suíte CRA (41 checks, jsdom, sem rede) |
+| `.github/workflows/ci.yml` | CI: `npm test` + higiene anti-vibe a cada push |
+| `.github/workflows/limpeza.yml` | Action diária que apaga caixas vencidas (TTL 7 dias) |
+| `scripts/limpeza.mjs` | Script da limpeza diária |
+| `LICENSE` | MIT |
 | `.nojekyll` | Acelera o Pages |
 
 ---

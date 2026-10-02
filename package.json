@@ -1,0 +1,13 @@
+{
+  "name": "caixa-agente",
+  "version": "1.1.0",
+  "private": true,
+  "description": "📬 Caixa de entrada pra agentes de IA: o operador manda instruções a qualquer momento, o agente lê no checkpoint e marca ✓ visto — sem interromper a execução",
+  "scripts": {
+    "test": "node tests/cra_test.cjs"
+  },
+  "devDependencies": {
+    "jsdom": "^24.1.3"
+  },
+  "license": "MIT"
+}
