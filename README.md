@@ -34,10 +34,12 @@ Siga o protocolo: consulte a caixa a cada checkpoint e nunca encerre sem esvazi�
 - **Multiusuário** — cada pessoa cria a própria caixa (1 clique, sem conta); caixas 100% isoladas por código de 8 caracteres (sem letras ambíguas 0/O/1/L/I);
 - **⏱️ Tempo real** — painel atualiza via WebSocket do Firebase: bloco escrito aparece na hora; visto do agente também;
 - **✓ VISTO = memória do agente** — `visto` guarda até onde ele processou; nunca reprocessa, nunca ignora nada novo; memória sobrevive entre sessões;
+- **✏️ Renomear caixa** — dá um nome à caixa (aparece no painel, no terminal e na lista); código e link não mudam;
+- **📬 Suas caixas na home** — o navegador guarda até 6 caixas (só na sua máquina, `localStorage`) com **pendências e contagem regressiva** ao vivo;
 - **✏️ Editar / 🗑 excluir bloco** — só enquanto o agente não viu; depois vira imutável 🔒;
 - **🗑 Excluir caixa** — só enquanto nada foi processado (visto = 0); exclusões com **transação atômica** no servidor (sem corrida com o visto);
 - **♻️ Resetar caixa** — zera mensagens e memória do agente **mantendo o mesmo código/link** (a mensagem já enviada ao agente continua valendo); uso ilimitado enquanto a caixa estiver no prazo;
-- **🖥️ Terminal da IA** — `?c=SEU-CODIGO#terminal`: versão texto do painel com blocos ao vivo + protocolo completo (pro agente que tem navegador);
+- **🖥️ Terminal da IA** — `?c=SEU-CODIGO#terminal`: versão texto do painel com blocos ao vivo, prazo e protocolo completo (pro agente que tem navegador) — com botão ← voltar para o painel;
 - **REST puro** — agentes sem navegador usam `GET`/`PUT` simples, **sem token, sem login**;
 - **🌙 Tema claro/escuro**, mobile-first, zero configuração pra qualquer pessoa.
 
@@ -70,6 +72,8 @@ Siga o protocolo: consulte a caixa a cada checkpoint e nunca encerre sem esvazi�
 
 `visto` é um número: **tudo com id ≤ visto já foi processado**. É a memória do agente.
 
+A caixa também carrega `nome` (opcional), `ttlHoras` (prazo escolhido na criação, 24–168) e `criado` (carimbo da última atividade — é o que renova o prazo).
+
 ### API que o agente usa (REST, sem credencial)
 
 ```bash
@@ -94,12 +98,13 @@ O protocolo completo vive no terminal (`#terminal`) — este é o resumo:
 4. **Anti-travamento:** consultar a caixa nunca é desculpa para esperar em loop;
 5. **Resiliência:** caixa fora do ar nunca derruba a tarefa.
 
-## 🕒 Retenção de dados (as caixas não ficam para sempre)
+## 🕒 Retenção de dados (você escolhe o prazo)
 
-- **TTL: 7 dias após a última mensagem** — caixa ativa nunca expira; abandonada é apagada;
-- Duas camadas: (1) abrir caixa vencida apaga-a na hora; (2) GitHub Action `Limpeza de caixas antigas` varre o banco **todo dia** e remove as vencidas;
+- **Na criação você escolhe quando a caixa apaga sozinha**: 24h, 48h, 3 dias ou **7 dias (máximo)** — fica gravado no nó da caixa (`ttlHoras`);
+- **O prazo renova a cada mensagem** (e a cada reset): é contado da **última atividade**, não da criação — caixa ativa nunca expira;
+- Duas camadas de limpeza, as duas respeitam o prazo de cada caixa: (1) abrir caixa vencida apaga-a na hora; (2) GitHub Action `Limpeza de caixas antigas` varre o banco **todo dia** e remove as vencidas;
 - **Privacidade por design**: instruções executadas são lixo — aqui elas se autodestroem;
-- Para mudar o prazo: `TTL_DIAS` no `index.html` + variável no workflow.
+- Para mudar o teto global: `TTL_DIAS` no `index.html`, no `scripts/limpeza.mjs` e no workflow.
 
 ## 🔒 Segurança e isolamento
 
@@ -124,7 +129,7 @@ Zero cara-de-IA: nada de gradiente roxo-lavanda, glow radial, vidro fosco ou Int
 npm install && npm test
 ```
 
-**41 checks** rodam em jsdom **sem rede e sem Firebase** (o app cai no modo demonstração sozinho): formato do protocolo (`#N | data | texto`, visto, pendências), códigos `XXXX-XXXX` sem caracteres ambíguos, endereços REST, protocolo gerado pro agente, render de blocos/terminal, tema persistente, escape de HTML — e a **guarda anti-vibe**: se alguém reintroduzir gradiente com transição, glow radial, roxo de IA, título-gradiente, bolinha piscando ou segredo real, a suíte quebra no CI.
+**58 checks** rodam em jsdom **sem rede e sem Firebase** (o app cai no modo demonstração sozinho): formato do protocolo (`#N | data | texto`, visto, pendências), códigos `XXXX-XXXX` sem caracteres ambíguos, endereços REST, protocolo gerado pro agente, render de blocos/terminal, tema persistente, escape de HTML — e a **guarda anti-vibe**: se alguém reintroduzir gradiente com transição, glow radial, roxo de IA, título-gradiente, bolinha piscando ou segredo real, a suíte quebra no CI.
 
 ## 📄 Arquivos
 

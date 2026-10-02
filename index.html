@@ -9,6 +9,20 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600;700&family=VT323&display=swap" rel="stylesheet">
+<!-- modal: renomear caixa -->
+<div id="m-ren" class="modal" hidden>
+  <div class="sheet">
+    <h2>✏️ Renomear caixa</h2>
+    <p class="hint">O nome aparece no painel, no terminal e na lista "Suas caixas" — o código e o link continuam os mesmos.</p>
+    <label for="ren-in">nome (opcional, máx. 40)</label>
+    <input id="ren-in" class="codein full" style="text-transform:none;letter-spacing:normal;font-size:14px" maxlength="40" placeholder="ex.: projeto site" autocomplete="off">
+    <div class="row">
+      <button id="ren-save" class="btn primary">Salvar</button>
+      <button id="ren-close" class="btn">Cancelar</button>
+    </div>
+  </div>
+</div>
+
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <style>
@@ -167,6 +181,20 @@
     box-shadow:4px 4px 0 rgba(0,0,0,.25);position:relative}
   [data-theme="dark"] .termbox{box-shadow:0 0 24px rgba(62,224,122,.08),4px 4px 0 rgba(0,0,0,.4)}
 
+  /* ─── criar: nome e prazo ─── */
+  .flabel{display:block;font-size:12px;color:var(--muted);margin:12px 0 5px;text-align:left}
+  .codein.full{width:100%;min-width:0}
+  select.codein{letter-spacing:normal;text-transform:none;cursor:pointer}
+  /* ─── suas caixas (home) ─── */
+  .mh{font-family:"VT323",monospace;font-weight:400;font-size:22px;letter-spacing:.03em;text-align:center;color:var(--ink);margin:30px 0 0}
+  .minha .code{font:600 13px "IBM Plex Mono",monospace;letter-spacing:.12em;color:var(--muted);margin:2px 0 0}
+  .minha .st{font-size:12.5px;margin:8px 0 12px}
+  .minha .row{display:flex;gap:8px;align-items:center}
+  .minha .row .btn{padding:6px 12px;font-size:12.5px;border-radius:6px}
+  .minha .row .x{margin-left:auto}
+  /* ─── terminal: voltar ─── */
+  #btn-back{margin:0 0 12px}
+
   /* ─── modais ─── */
   .modal{position:fixed;inset:0;background:rgba(10,12,8,.6);display:flex;align-items:center;justify-content:center;padding:16px;z-index:50;animation:fade .15s ease}
   .modal[hidden]{display:none}
@@ -238,7 +266,16 @@
     <div class="card">
       <h3>✨ Criar minha caixa</h3>
       <p>Grátis, sem cadastro. Você recebe um link exclusivo da sua caixa.</p>
-      <button id="btn-create" class="btn primary big">Criar minha caixa agora</button>
+      <label class="flabel" for="new-nome">nome da caixa (opcional)</label>
+      <input id="new-nome" class="codein full" style="text-transform:none;letter-spacing:normal;font-size:14px" placeholder="ex.: projeto site" maxlength="40" autocomplete="off">
+      <label class="flabel" for="new-ttl">apagar automaticamente após</label>
+      <select id="new-ttl" class="codein full">
+        <option value="24">24 horas</option>
+        <option value="48">48 horas</option>
+        <option value="72">3 dias</option>
+        <option value="168" selected>7 dias (máximo)</option>
+      </select>
+      <button id="btn-create" class="btn primary big" style="margin-top:14px">Criar minha caixa agora</button>
     </div>
     <div class="card">
       <h3>🔑 Já tenho uma caixa</h3>
@@ -248,6 +285,10 @@
         <button id="btn-open" class="btn big">Abrir</button>
       </div>
     </div>
+  </div>
+  <div id="minhas-wrap" hidden>
+    <h3 class="mh">📬 Suas caixas</h3>
+    <div id="minhas" class="cards"></div>
   </div>
   <div class="how">
     <b>Como funciona:</b> 1️⃣ crie a caixa e guarde seu link · 2️⃣ mande a mensagem pronta pro seu agente (uma vez só) ·
@@ -269,15 +310,17 @@
   </section>
   <section id="blocks"></section>
   <div style="text-align:center;margin-top:16px">
+    <button id="btn-rename" class="btn" style="font-size:12.5px;padding:7px 14px" title="Dá um nome à caixa — o código e o link não mudam">✏️ renomear</button>
     <button id="btn-resetbox" class="btn" style="color:var(--danger);font-size:12.5px;padding:7px 14px" title="Zera as mensagens e a memória do agente mantendo o MESMO código e link — a caixa volta a nascer">♻️ resetar caixa</button>
     <button id="btn-delbox" class="btn" style="color:var(--danger);font-size:12.5px;padding:7px 14px" title="Apaga a caixa e TODAS as mensagens — só é possível enquanto o agente não viu nada (visto = 0)">🗑 excluir esta caixa</button>
   </div>
-  <div style="text-align:center;margin-top:10px;font-size:12px;color:var(--muted)">🕒 As caixas são apagadas automaticamente 7 dias após a última mensagem.</div>
+  <div style="text-align:center;margin-top:10px;font-size:12px;color:var(--muted)">🕒 A caixa é apagada automaticamente no prazo que você escolheu (24h a 7 dias), contado da última mensagem.</div>
 </main>
 
 <!-- ══════════ TERMINAL (IA) ══════════ -->
 <div id="view-terminal" hidden>
   <main>
+    <button id="btn-back" class="btn">← voltar para o painel</button>
     <div class="termbox"><div id="term-out"></div></div>
   </main>
 </div>
@@ -304,7 +347,7 @@
 <div id="m-created" class="modal" hidden>
   <div class="sheet">
     <h2>🎉 Sua caixa está pronta!</h2>
-    <p class="hint">Guarde o <b>código</b> e o <b>link</b> abaixo — eles são o acesso à sua caixa (quem tem o link, usa a caixa). As caixas são apagadas automaticamente após 7 dias sem novas mensagens.</p>
+    <p class="hint">Guarde o <b>código</b> e o <b>link</b> abaixo — eles são o acesso à sua caixa (quem tem o link, usa a caixa). Sua caixa será apagada automaticamente no prazo escolhido, contado da última mensagem.</p>
     <div class="newcode" id="new-code"></div>
     <label>Seu link exclusivo</label>
     <div class="linkbox">
@@ -337,7 +380,7 @@ const FB_CFG={ apiKey:"AIzaSyClWVJPjl8EP2oI6L5dTP7lWuDx1LHgSYI",
   projectId:"caixa-agente" };
 const FB_DB=FB_CFG.databaseURL;
 const HEADER_TXT='#CAIXA DE ENTRADA — append-only. Nao apague linhas antigas.\n';
-const TTL_DIAS=7;   /* caixas são apagadas N dias após a última mensagem (0 = nunca expira) */
+const TTL_DIAS=7;   /* prazo PADRÃO em dias (caixa sem ttlHoras próprio). O prazo real é escolhido na criação (1–168h) e renovado a cada mensagem */
 
 /* ============ util ============ */
 const $ = s => document.querySelector(s);
@@ -359,7 +402,7 @@ function blocosUrl(code){ return `${FB_DB}/boxes/${code}/blocos.json`; }
 function vistoUrl(code){ return `${FB_DB}/boxes/${code}/visto.json`; }
 
 /* ============ estado ============ */
-const S={ blocks:[], seen:0, code:null, demo:false, editId:null, theme:'light', view:'home' };
+const S={ blocks:[], seen:0, code:null, demo:false, editId:null, theme:'light', view:'home', nome:'', criado:0, ttl:168 };
 let db=null, boxRef=null;
 const netErr=e=>e instanceof TypeError||/network|offline|Failed to fetch|permission_denied|unavailable/i.test(String(e&&e.message||e));
 
@@ -390,23 +433,103 @@ function applyVal(v){
   if(!v) return false;
   const b=parseBlocks(typeof v.blocos==='string'?v.blocos:'');
   const seen=parseSeenLine(v.visto);
-  const changed=JSON.stringify([b,seen])!==JSON.stringify([S.blocks,S.seen]);
-  S.blocks=b; S.seen=seen;
+  const nome=typeof v.nome==='string'?v.nome:'';
+  const cri=(typeof v.criado==='number'&&v.criado>0)?v.criado:0;
+  const changed=JSON.stringify([b,seen,nome])!==JSON.stringify([S.blocks,S.seen,S.nome]);
+  S.blocks=b; S.seen=seen; S.nome=nome; S.criado=cri; S.ttl=ttlDe(v);
   return changed;
 }
-async function criarCaixaFB(){
+async function criarCaixaFB(nome,ttlHoras){
   if(!db) throw new Error('banco indisponível (sem internet?)');
+  const n=sanitizeNome(nome);
+  const ttl=ttlDe({ttlHoras});
   let code,tries=0;
   while(true){
     code=gerarCodigo();
+    const init={blocos:HEADER_TXT, visto:0, criado:Date.now(), ttlHoras:ttl};
+    if(n) init.nome=n;
     const res=await db.ref('boxes/'+code).transaction(cur=>{
       if(cur) return;                       /* código ocupado → tenta outro */
-      return {blocos:HEADER_TXT, visto:0, criado:Date.now()};
+      return init;
     });
     if(res.committed) break;
     if(++tries>5) throw new Error('não consegui achar código livre, tente de novo');
   }
-  return {code};
+  return {code,nome:n,ttl};
+}
+
+/* ============ prazo (TTL) e caixas salvas ============ */
+function ttlDe(v){
+  const t=v?v.ttlHoras:undefined;
+  return (typeof t==='number'&&t>=1&&t<=168)?Math.round(t):TTL_DIAS*24;
+}
+function expiraInfo(v,agora){
+  const ttlH=ttlDe(v), base=(v&&typeof v.criado==='number'&&v.criado>0)?v.criado:0;
+  const resta=base? base+ttlH*3600000-(agora||Date.now()) : 0;
+  let txt;
+  if(!base) txt='—';
+  else if(resta<=0) txt='expirada';
+  else{
+    const m=Math.floor(resta/60000), d=Math.floor(m/1440), h=Math.floor((m%1440)/60);
+    if(d>=1) txt=d+'d '+String(h).padStart(2,'0')+'h';
+    else if(h>=1) txt=h+'h '+String(m%60).padStart(2,'0')+'min';
+    else if(m>=1) txt=m+'min';
+    else txt='menos de 1min';
+  }
+  return {ttlH,resta,txt};
+}
+function sanitizeNome(s){
+  return String(s||'').replace(/[\u0000-\u001f\u007f]/g,' ').replace(/\s+/g,' ').trim().slice(0,40);
+}
+function minhasGet(){
+  try{ const a=JSON.parse(localStorage.getItem('caixa_minhas')||'[]'); return Array.isArray(a)?a.filter(x=>x&&x.c):[]; }catch(e){ return []; }
+}
+function minhasAdd(code,nome){
+  const c=fmtCode(normalizeCode(code)); if(!c||c.length!==9) return;
+  let a=minhasGet().filter(x=>x.c!==c);
+  a.unshift({c,n:sanitizeNome(nome)||''});
+  a=a.slice(0,6);
+  try{ localStorage.setItem('caixa_minhas',JSON.stringify(a)); }catch(e){}
+}
+function minhasRm(code){
+  const c=fmtCode(normalizeCode(code));
+  try{ localStorage.setItem('caixa_minhas',JSON.stringify(minhasGet().filter(x=>x.c!==c))); }catch(e){}
+}
+function updateChip(){
+  if(!S.code) return;
+  $('#codechip').textContent=(S.nome?S.nome+' · ':'')+'caixa '+S.code;
+}
+async function renderMinhas(){
+  const wrap=$('#minhas-wrap'), box=$('#minhas');
+  const lista=minhasGet();
+  box.innerHTML='';
+  if(!lista.length||typeof fetch!=='function'){ wrap.hidden=true; return; }
+  const agora=Date.now();
+  const infos=await Promise.all(lista.map(async it=>{
+    try{
+      const rr=await fetch(blocosUrl(it.c).replace('/blocos.json','.json'));
+      return {it,v:await rr.json()};
+    }catch(e){ return {it,v:null,erro:true}; }
+  }));
+  for(const {it,v,erro} of infos){
+    const nome=(v&&typeof v.nome==='string'&&v.nome)||it.n||'';
+    const el=document.createElement('div'); el.className='card minha';
+    let st;
+    if(erro) st='não deu pra checar agora (sem internet?)';
+    else if(!v) st='esta caixa já foi apagada';
+    else{
+      const b=parseBlocks(typeof v.blocos==='string'?v.blocos:'');
+      const pend=b.filter(x=>x.id>(parseSeenLine(v.visto))).length;
+      const ei=expiraInfo(v,agora);
+      st=(pend?pend+' pendente'+(pend>1?'s':''):'em dia ✓')+' · expira em '+ei.txt+(ei.txt==='expirada'?' (a limpeza diária remove)':'');
+    }
+    el.innerHTML=`<h3>${esc(nome||('caixa '+it.c))}</h3>${nome?`<div class="code">${esc(it.c)}</div>`:''}<p class="st">${esc(st)}</p>
+      <div class="row"><button class="btn abrir">Abrir</button><button class="btn x" title="Só esquece esta caixa na lista — não apaga nada do banco">✕</button></div>`;
+    el.querySelector('.abrir').onclick=async()=>{ try{ await openBox(it.c); }catch(e){ toast(e.message); } };
+    el.querySelector('.x').onclick=()=>{ minhasRm(it.c); renderMinhas(); };
+    box.appendChild(el);
+  }
+  wrap.hidden=false;
 }
 
 /* ============ instruções da caixa ============ */
@@ -522,7 +645,8 @@ function renderTerminal(){
   }).join('\n\n')||'(caixa vazia — nenhuma mensagem ainda)';
   $('#term-out').textContent =
 `== STATUS AO VIVO ==============================
-caixa: ${S.code}   visto ate: #${S.seen}   pendentes: ${pend.length}   blocos: ${S.blocks.length}
+caixa: ${S.nome?S.nome+' · ':''}${S.code}   visto ate: #${S.seen}   pendentes: ${pend.length}   blocos: ${S.blocks.length}
+expira: ${expiraInfo({criado:S.criado,ttlHoras:S.ttl}).txt}${S.criado?' · prazo '+ttlDe({ttlHoras:S.ttl})+'h':''}
 ================================================
 
 == BLOCOS (mensagens do operador) ==============
@@ -541,7 +665,8 @@ function showView(v){
   $('#view-terminal').hidden = v!=='terminal';
   const inBox = v!=='home';
   $('#codechip').hidden=!inBox; $('#btn-refresh').hidden=!inBox; $('#btn-agent').hidden=!inBox; $('#livechip').hidden=!inBox||S.demo;
-  if(inBox) $('#codechip').textContent='caixa '+S.code;
+  if(inBox) updateChip();
+  if(v==='home') renderMinhas();
   banner(null);
 }
 function goHome(){
@@ -564,12 +689,15 @@ async function openBox(codeRaw,opts={}){
   if(!snap||!snap.exists()){
     boxRef=null; throw new Error('código não encontrado — confira e tente de novo');
   }
-  const cri=(snap.val()&&snap.val().criado)||0;
-  if(TTL_DIAS>0&&cri&&Date.now()-cri>TTL_DIAS*86400000){
+  const val=snap.val()||{};
+  const cri=(typeof val.criado==='number')?val.criado:0;
+  const ttlH=ttlDe(val);
+  if(cri&&Date.now()-cri>ttlH*3600000){
     boxRef.off(); try{ await boxRef.remove(); }catch(e){}
-    boxRef=null; throw new Error(`esta caixa expirou (apagamos após ${TTL_DIAS} dias sem mensagens) — crie uma nova`);
+    boxRef=null; throw new Error(`esta caixa expirou (venceu ${ttlH>=24?(ttlH/24)+' dia'+(ttlH>24?'s':'')+' após':ttlH+'h após'} a última mensagem) — crie uma nova`);
   }
   applyVal(snap.val());
+  minhasAdd(fcode,S.nome); updateChip();
   boxRef.on('value', s=>{ if(applyVal(s.val())&&!S.editId) renderAll(); });
   showView(opts.hash==='#terminal'?'terminal':'box');
   renderAll();
@@ -630,7 +758,7 @@ async function resetBox(){
   if(!boxRef){ toast('Sem conexão — modo demo não grava'); return; }
   if(!confirm(`Resetar a caixa ${S.code}?\n\n• Apaga TODAS as mensagens (inclusive as já vistas)\n• Zera a memória do agente (visto → 0)\n• O código e o link continuam OS MESMOS\n\nSem volta. Continuar?`)) return;
   try{
-    const res=await boxRef.transaction(()=>({blocos:HEADER_TXT, visto:0, criado:Date.now()}));
+    const res=await boxRef.transaction(cur=>Object.assign({},cur,{blocos:HEADER_TXT, visto:0, criado:Date.now()}));
     if(res.committed){ S.editId=null; toast('Caixa resetada ✓ — mesmo link, caixa nova'); }
     else toast('Não consegui resetar — tente de novo');
   }catch(e){ banner('Erro ao resetar: '+e.message,'erro'); }
@@ -646,7 +774,7 @@ async function delBox(){
       if((cur.visto||0)>0) return undefined;         /* agente já processou algo -> aborta */
       return null;                                   /* exclui o nó inteiro */
     });
-    if(res.committed){ boxRef.off(); boxRef=null; toast('Caixa excluída'); goHome(); }
+    if(res.committed){ boxRef.off(); boxRef=null; minhasRm(S.code); toast('Caixa excluída'); goHome(); }
     else toast('O agente acabou de ver algo — exclusão bloqueada 🔒');
   }catch(e){ banner('Erro ao excluir: '+e.message,'erro'); }
 }
@@ -669,7 +797,7 @@ function enterDemo(){
 #2 | ${fmt(new Date(Date.now()-18e5))} | Use as cores azul e branco
 #3 | ${fmt(new Date(Date.now()-6e5))} | O logo ficou pequeno, aumenta um pouco
 #4 | ${fmt()} | Troca o botão "Comprar" para a cor verde`);
-  S.seen=2; banner('🟡 Sem conexão com o banco — MODO DEMONSTRAÇÃO (nada é gravado). No site publicado, funciona de verdade.');
+  S.seen=2; S.nome='Projeto exemplo'; S.criado=Date.now()-36e5; S.ttl=168; banner('🟡 Sem conexão com o banco — MODO DEMONSTRAÇÃO (nada é gravado). No site publicado, funciona de verdade.');
 }
 
 /* ============ clipboard ============ */
@@ -708,7 +836,8 @@ $('#btn-theme').onclick=()=>applyTheme(S.theme==='dark'?'light':'dark');
 $('#btn-create').onclick=async()=>{
   const b=$('#btn-create'); b.disabled=true; b.textContent='Criando…';
   try{
-    const {code}=await criarCaixaFB();
+    const {code,nome}=await criarCaixaFB($('#new-nome').value, parseInt($('#new-ttl').value,10));
+    minhasAdd(code,nome);
     $('#new-code').textContent=code;
     $('#new-link').value=boxUrl(code);
     $('#new-msg').value=buildAgentMsg(code);
@@ -728,7 +857,19 @@ $('#btn-delbox').onclick=delBox;
 $('#msg-copy').onclick=()=>copyText($('#msg-out').value);
 $('#msg-copy-url').onclick=()=>copyText(termUrl(S.code));
 $('#msg-close').onclick=()=>{$('#m-agent').hidden=true;};
-$('#msg-preview').onclick=()=>{ $('#m-agent').hidden=true; showView('terminal'); };
+$('#msg-preview').onclick=()=>{ $('#m-agent').hidden=true; showView('terminal'); try{ history.replaceState(null,'',termUrl(S.code)); }catch(e){} };
+$('#btn-rename').onclick=()=>{ if(!S.code) return; $('#ren-in').value=S.nome||''; $('#m-ren').hidden=false; $('#ren-in').focus(); };
+$('#ren-close').onclick=()=>{ $('#m-ren').hidden=true; };
+$('#ren-save').onclick=async()=>{
+  const n=sanitizeNome($('#ren-in').value);
+  $('#m-ren').hidden=true;
+  if(!boxRef){ toast('Sem conexão — modo demo não grava'); return; }
+  try{ await boxRef.child('nome').set(n||null); S.nome=n; updateChip(); minhasAdd(S.code,n); renderAll(); toast(n?'Nome salvo ✓':'Nome removido ✓'); }
+  catch(e){ toast('Não consegui salvar o nome: '+e.message); }
+};
+$('#ren-in').addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); $('#ren-save').click(); } });
+$('#btn-back').onclick=()=>{ showView('box'); renderAll(); try{ history.replaceState(null,'',boxUrl(S.code)); }catch(e){} };
+window.addEventListener('hashchange',()=>{ if(!S.code) return; const t=location.hash==='#terminal'; showView(t?'terminal':'box'); if(!t) renderAll(); });
 $('#btn-agent').onclick=()=>{
   if(!S.code) return;
   $('#msg-out').value=buildAgentMsg(S.code);

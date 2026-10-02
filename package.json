@@ -1,6 +1,6 @@
 {
   "name": "caixa-agente",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "private": true,
   "description": "📬 Caixa de entrada pra agentes de IA: o operador manda instruções a qualquer momento, o agente lê no checkpoint e marca ✓ visto — sem interromper a execução",
   "scripts": {

@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 /* Limpeza de caixas expiradas do Firebase RTDB.
  * Roda via GitHub Action (cron diário). Precisa do secret FIREBASE_SERVICE_ACCOUNT.
- * Regra: apaga boxes/{codigo} cujo `criado` (última mensagem) seja mais antigo que TTL_DIAS dias.
+ * Regra: apaga boxes/{codigo} cuja última mensagem (`criado`) seja mais antiga que o
+ * prazo da caixa (`ttlHoras`, 1–168h, escolhido na criação) — padrão: TTL_DIAS dias.
  */
 import { readFileSync } from 'node:fs';
 
@@ -33,10 +34,12 @@ const vencidas = [];
 snap.forEach(ch => {
   const v = ch.val() || {};
   const t = typeof v.criado === 'number' ? v.criado : 0;
-  if (t && t < corte) vencidas.push(ch.key);
+  const ttlH = (typeof v.ttlHoras === 'number' && v.ttlHoras >= 1 && v.ttlHoras <= 168)
+    ? Math.round(v.ttlHoras) : TTL_DIAS * 24;
+  if (t && t < Date.now() - ttlH * 3600000) vencidas.push(ch.key);
 });
 
-console.log(`Varredura: ${total} caixa(s) · TTL ${TTL_DIAS} dias · ${vencidas.length} vencida(s)`);
+console.log(`Varredura: ${total} caixa(s) · TTL padrão ${TTL_DIAS} dias (caixas podem ter prazo próprio de 24h a 7 dias) · ${vencidas.length} vencida(s)`);
 let removidas = 0;
 for (const code of vencidas) {
   try {

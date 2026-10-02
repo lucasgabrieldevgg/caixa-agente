@@ -28,9 +28,13 @@ function carregar() {
       gerarCodigo, buildInstructions, buildAgentMsg, esc, fmt,
       blocosUrl, vistoUrl, termUrl, HEADER_TXT,
       enterDemo, renderBlocks, renderTerminal, renderAll, applyTheme,
+      ttlDe, expiraInfo, sanitizeNome, minhasGet, minhasAdd, minhasRm, updateChip,
       get blocks(){ return S.blocks; }, set blocks(v){ S.blocks = v; },
       get seen(){ return S.seen; }, set seen(v){ S.seen = v; },
-      get code(){ return S.code; }, set code(v){ S.code = v; }
+      get code(){ return S.code; }, set code(v){ S.code = v; },
+      get nome(){ return S.nome; }, set nome(v){ S.nome = v; },
+      get criado(){ return S.criado; }, set criado(v){ S.criado = v; },
+      get ttl(){ return S.ttl; }, set ttl(v){ S.ttl = v; }
     };`);
   return dom;
 }
@@ -101,6 +105,41 @@ function carregar() {
     X.applyTheme('dark');
     ok(d.documentElement.dataset.theme === 'dark' && w.localStorage.getItem('caixa_tema') === 'dark', 'tema persiste no storage');
     ok(X.esc('<b>&"\'') === '&lt;b&gt;&amp;&quot;&#39;', 'esc neutraliza injeção');
+  }
+
+  console.log('— ⏳ PRAZOS, RENOMEAR & SUAS CAIXAS —');
+  {
+    const dom = carregar();
+    const w = dom.window, d = w.document, X = w.__X;
+    ok(X.ttlDe({ ttlHoras: 48 }) === 48 && X.ttlDe({ ttlHoras: 168 }) === 168, 'ttlDe respeita o prazo escolhido');
+    ok(X.ttlDe({ ttlHoras: 999 }) === 168 && X.ttlDe({ ttlHoras: 0 }) === 168 && X.ttlDe(null) === 168, 'fora de 1–168h cai no padrão de 7 dias (168h)');
+    const agora = Date.now();
+    ok(X.expiraInfo({ criado: agora - 48 * 3600e3, ttlHoras: 168 }, agora).txt === '5d 00h', 'contagem em dias (5d 00h)');
+    ok(X.expiraInfo({ criado: agora - 3600e3, ttlHoras: 24 }, agora).txt === '23h 00min', 'contagem em horas (23h 00min)');
+    ok(X.expiraInfo({ criado: agora - 90 * 60e3, ttlHoras: 2 }, agora).txt === '30min', 'contagem em minutos');
+    ok(X.expiraInfo({ criado: agora - 200 * 3600e3, ttlHoras: 24 }, agora).txt === 'expirada', 'prazo vencido = expirada');
+    ok(X.sanitizeNome('  Um \u0000 nome\tcom   espaços  ') === 'Um nome com espaços', 'sanitizeNome limpa lixo e espaços');
+    ok(X.sanitizeNome('x'.repeat(50)).length === 40, 'sanitizeNome corta em 40');
+    w.localStorage.clear();
+    X.minhasAdd('AB C1 2DEF', 'Projeto site');
+    ok(X.minhasGet().length === 1 && X.minhasGet()[0].c === 'ABC1-2DEF' && X.minhasGet()[0].n === 'Projeto site', 'minhasAdd normaliza código e guarda nome');
+    X.minhasAdd('ABC1-2DEF', 'Outro nome');
+    ok(X.minhasGet().length === 1 && X.minhasGet()[0].n === 'Outro nome', 'sem duplicata — atualiza o nome');
+    for (const c of ['ZZZZ-1111', 'YYYY-2222', 'WWWW-3333', 'VVVV-4444', 'UUUU-5555', 'TTTT-6666']) X.minhasAdd(c, '');
+    ok(X.minhasGet().length === 6, 'lista limitada a 6 caixas');
+    X.minhasRm('ZZZZ-1111');
+    ok(X.minhasGet().length === 5 && !X.minhasGet().some(x => x.c === 'ZZZZ-1111'), 'minhasRm remove só a caixa certa');
+    X.nome = 'Projeto site'; X.code = 'TEST-1234'; X.updateChip();
+    ok(d.getElementById('codechip').textContent === 'Projeto site · caixa TEST-1234', 'chip mostra NOME · código');
+    X.nome = ''; X.updateChip();
+    ok(d.getElementById('codechip').textContent === 'caixa TEST-1234', 'sem nome, chip mostra só o código');
+    X.nome = 'Projeto site'; X.criado = agora - 3600e3; X.ttl = 48;
+    X.renderTerminal();
+    const term = d.getElementById('term-out').textContent;
+    ok(/expira: 1d 2[23]h · prazo 48h/.test(term), 'terminal mostra expira + prazo escolhido');
+    ok(term.includes('caixa: Projeto site · TEST-1234'), 'terminal mostra o nome da caixa');
+    ok(d.getElementById('btn-back') && !d.getElementById('btn-back').hidden, 'terminal tem botão ← voltar para o painel');
+    w.localStorage.clear();
   }
 
   console.log('— 🔥 CRA: NADA DE CARA DE IA —');
