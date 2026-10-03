@@ -40,8 +40,8 @@ Siga o protocolo: consulte a caixa a cada checkpoint e nunca encerre sem esvazi�
 - **🗑 Excluir caixa** — só enquanto nada foi processado (visto = 0); exclusões com **transação atômica** no servidor (sem corrida com o visto);
 - **♻️ Resetar caixa** — zera mensagens e memória do agente **mantendo o mesmo código/link** (a mensagem já enviada ao agente continua valendo); uso ilimitado enquanto a caixa estiver no prazo;
 - **💬 Comentário do agente** — extra opcional: ao concluir um bloco, o agente deixa o comentário dele (dúvida, decisão, resultado) colado na instrução;
-- **📈 Acompanhamento** — aba própria onde o agente posta o que está fazendo e o que conseguiu a cada checkpoint, com nível de detalhe **simples / médio / completo**;
-- **⚙️ Configurações** — liga/desliga os extras e muda o nível a qualquer momento (o agente relê a configuração a cada checkpoint e obedece no próximo). Aviso honesto: com os extras ligados o agente escreve mais — **pode gastar tokens adicionais da sua IA**;
+- **📈 Acompanhamento** — aba própria onde o agente posta o que está fazendo e o que conseguiu a cada checkpoint;
+- **⚙️ Configurações** — cada extra tem nível próprio **desativado / simples / médio / completo**, mudável a qualquer momento (o agente relê a configuração a cada checkpoint e obedece no próximo). Avisos honestos: com os extras ligados o agente escreve mais — **pode gastar tokens adicionais da sua IA** — e se o seu agente **já comenta/reporta por conta própria** no ambiente dele, deixe em *desativado* (os extras existem pra quem não tem esse retorno);
 - **🖥️ Terminal da IA** — `?c=SEU-CODIGO#terminal`: versão texto do painel com blocos ao vivo, prazo e protocolo completo (pro agente que tem navegador) — com botão ← voltar para o painel;
 - **REST puro** — agentes sem navegador usam `GET`/`PUT` simples, **sem token, sem login**;
 - **🌙 Tema claro/escuro**, mobile-first, zero configuração pra qualquer pessoa.
@@ -75,7 +75,7 @@ Siga o protocolo: consulte a caixa a cada checkpoint e nunca encerre sem esvazi�
 
 `visto` é um número: **tudo com id ≤ visto já foi processado**. É a memória do agente.
 
-A caixa também carrega `nome` (opcional), `ttlHoras` (prazo escolhido na criação, 24–168), `criado` (carimbo da última atividade — é o que renova o prazo), `cfg` `{coment, prog, nivel}` (extras), `coment/{id}` (comentários do agente por bloco) e `progresso` (fita do acompanhamento, mesmo formato `#N | data | nivel | texto`).
+A caixa também carrega `nome` (opcional), `ttlHoras` (prazo escolhido na criação, 24–168), `criado` (carimbo da última atividade — é o que renova o prazo), `cfg` `{coment, comentNivel, prog, progNivel}` (extras com nível independente; caixas antigas com `nivel` único continuam funcionando), `coment/{id}` (comentários do agente por bloco) e `progresso` (fita do acompanhamento, mesmo formato `#N | data | nivel | texto`).
 
 ### API que o agente usa (REST, sem credencial)
 
@@ -133,7 +133,7 @@ Zero cara-de-IA: nada de gradiente roxo-lavanda, glow radial, vidro fosco ou Int
 npm install && npm test
 ```
 
-**91 checks** rodam em jsdom **sem rede e sem Firebase** (o app cai no modo demonstração sozinho): formato do protocolo (`#N | data | texto`, visto, pendências), códigos `XXXX-XXXX` sem caracteres ambíguos, endereços REST, protocolo gerado pro agente, render de blocos/terminal, tema persistente, escape de HTML — e a **guarda anti-vibe**: se alguém reintroduzir gradiente com transição, glow radial, roxo de IA, título-gradiente, bolinha piscando ou segredo real, a suíte quebra no CI.
+**97 checks** rodam em jsdom **sem rede e sem Firebase** (o app cai no modo demonstração sozinho): formato do protocolo (`#N | data | texto`, visto, pendências), códigos `XXXX-XXXX` sem caracteres ambíguos, endereços REST, protocolo gerado pro agente, render de blocos/terminal, tema persistente, escape de HTML — e a **guarda anti-vibe**: se alguém reintroduzir gradiente com transição, glow radial, roxo de IA, título-gradiente, bolinha piscando ou segredo real, a suíte quebra no CI.
 
 ## 📄 Arquivos
 

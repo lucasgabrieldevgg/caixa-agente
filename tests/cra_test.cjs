@@ -166,16 +166,21 @@ function carregar() {
       cfg: { coment: 1, prog: 1, nivel: 'completo' },
       coment: { '1': 'Feito — usei verde-fósforo.' },
       progresso: X.progContent([{ id: 1, ts: '2026-10-02 21:30', nivel: 'simples', text: 'Feito.' }]) });
-    ok(X.cfg.coment === true && X.cfg.prog === true && X.cfg.nivel === 'completo', 'applyVal lê a cfg da caixa');
+    ok(X.cfg.coment === true && X.cfg.comentNivel === 'completo' && X.cfg.prog === true && X.cfg.progNivel === 'completo', 'applyVal: cfg LEGADO (nivel único) mapeia pros dois');
     ok(X.coment['1'] === 'Feito — usei verde-fósforo.', 'applyVal lê comentários');
     ok(X.prog.length === 1 && X.prog[0].nivel === 'simples', 'applyVal lê o acompanhamento');
+    X.applyVal({ blocos: '#1 | 2026-10-02 21:00 | faça', visto: 1, cfg: { coment: true, comentNivel: 'simples', prog: true, progNivel: 'completo' } });
+    ok(X.cfg.comentNivel === 'simples' && X.cfg.progNivel === 'completo', 'applyVal: níveis INDEPENDENTES por extra');
+    X.applyVal({ blocos: '#1 | 2026-10-02 21:00 | faça', visto: 1, cfg: { coment: false, comentNivel: null, prog: true, progNivel: 'medio' } });
+    ok(X.cfg.coment === false && X.cfg.comentNivel === null && X.cfg.progNivel === 'medio', 'applyVal: extra desativado = null');
     X.applyVal({ blocos: '#1 | 2026-10-02 21:00 | faça', visto: 1 });
-    ok(X.cfg.coment === false && X.cfg.prog === false, 'caixa SEM cfg = extras desligados (padrão seguro)');
+    ok(X.cfg.coment === false && X.cfg.comentNivel === null && X.cfg.prog === false && X.cfg.progNivel === null, 'caixa SEM cfg = extras desligados (padrão seguro)');
     ok(X.cfgUrl('ABCD-1234').endsWith('/boxes/ABCD-1234/cfg.json'), 'URL da cfg');
     ok(X.comentUrl('ABCD-1234', 7).endsWith('/boxes/ABCD-1234/coment/7.json'), 'URL de comentário por bloco');
     ok(X.progUrl('ABCD-1234').endsWith('/boxes/ABCD-1234/progresso.json'), 'URL do acompanhamento');
     const inst = X.buildInstructions('ABCD-1234');
     ok(inst.includes('/cfg.json') && inst.includes('/coment/N.json') && inst.includes('/progresso.json'), 'protocolo documenta os 3 endereços dos extras');
+    ok(inst.includes('comentNivel') && inst.includes('progNivel'), 'protocolo: níveis independentes por extra');
     ok(inst.includes('EXTRAS') && inst.includes('simples') && inst.includes('medio') && inst.includes('completo'), 'protocolo explica os extras e os 3 níveis');
     ok(inst.includes('INDISPONÍVEL'), 'protocolo: cfg vazia/flag falsa = não usar');
     const msg = X.buildAgentMsg('ABCD-1234');
@@ -206,15 +211,23 @@ function carregar() {
     ok(d.getElementById('tab-acomp').hidden === false && d.getElementById('tab-mensagens').hidden === true, 'setTab(prog) troca pra acompanhamento');
     X.setTab('msg');
     ok(d.getElementById('tab-mensagens').hidden === false && d.getElementById('tab-acomp').hidden === true, 'setTab(msg) volta');
-    X.cfg = { coment: false, prog: false, nivel: 'simples' };
+    X.cfg = { coment: false, comentNivel: null, prog: false, progNivel: null };
     X.renderProg();
     ok(d.getElementById('prog-estado').textContent.includes('desligado'), 'desligado mostra instrução pra ligar no ⚙️');
+    ok(d.getElementById('prog-nivel').textContent === 'desativado' && d.getElementById('prog-badge').className.includes('desativado'), 'badge da aba mostra nível "desativado" quando off');
+    X.cfg = { coment: true, comentNivel: 'simples', prog: true, progNivel: 'completo' };
+    X.renderProg();
+    ok(d.getElementById('prog-nivel').textContent === 'completo', 'badge mostra o nível do ACOMPANHAMENTO');
     X.renderTerminal();
-    ok(d.getElementById('term-out').textContent.includes('extras: coment off · prog off · nivel simples'), 'terminal mostra o estado dos extras');
-    ok(d.getElementById('cfg-coment') && d.getElementById('cfg-prog') && d.getElementById('cfg-nivel'), 'modal de configurações completo');
+    const tex = d.getElementById('term-out').textContent;
+    ok(tex.includes('extras: coment simples · prog completo'), 'terminal mostra nível de CADA extra');
+    X.cfg = { coment: false, comentNivel: null, prog: false, progNivel: null };
+    X.renderTerminal();
+    ok(d.getElementById('term-out').textContent.includes('extras: coment desativado · prog desativado'), 'terminal mostra "desativado" quando off');
+    ok(d.getElementById('cfg-coment-nivel') && d.getElementById('cfg-prog-nivel'), 'modal de configurações completo (2 selects independentes)');
+    ok([...d.getElementById('cfg-coment-nivel').options].some(o => o.value === 'desativado'), 'select tem a opção desativado');
     ok(d.getElementById('btn-cfg') && !d.getElementById('btn-cfg').hidden, 'botão ⚙️ configurações no rodapé');
-    ok(d.getElementById('new-coment').checked && d.getElementById('new-prog').checked, 'criação: extras marcados por padrão');
-    ok(d.getElementById('new-nivel').value === 'medio', 'criação: nível médio por padrão');
+    ok(d.getElementById('new-coment-nivel').value === 'medio' && d.getElementById('new-prog-nivel').value === 'medio', 'criação: ambos os extras em médio por padrão');
   }
 
   console.log('— 🔥 CRA: NADA DE CARA DE IA —');
