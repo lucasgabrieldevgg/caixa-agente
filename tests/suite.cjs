@@ -1,5 +1,5 @@
 // ============================================================
-// 📬 Suíte CRA — Caixa de Entrada do Agente (estação teletype)
+// 📬 Suíte de consistência — Caixa de Entrada do Agente (estação teletype)
 // Testa o formato do protocolo (parse, visto, pendências),
 // as instruções geradas pro agente, o render e BLINDA o anti-vibe.
 // ============================================================
@@ -230,7 +230,7 @@ function carregar() {
     ok(d.getElementById('new-coment-nivel').value === 'medio' && d.getElementById('new-prog-nivel').value === 'medio', 'criação: ambos os extras em médio por padrão');
   }
 
-  console.log('— 🔥 CRA: NADA DE CARA DE IA —');
+  console.log('— 🔥 NADA DE CARA DE IA —');
   {
     ok(/"IBM Plex Mono"/.test(html) && /fonts.googleapis.com\/css2\?family=IBM\+Plex\+Mono/.test(html), 'corpo em IBM Plex Mono (teletype de verdade)');
     ok(/"VT323"/.test(html) && /family=VT323/.test(html), 'display em VT323 (CRT vintage)');

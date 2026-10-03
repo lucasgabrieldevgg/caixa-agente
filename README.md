@@ -117,7 +117,7 @@ O protocolo completo vive no terminal (`#terminal`) — este é o resumo:
 - **Caixas não se misturam** — cada código é um nó isolado; blocos, visto e memória nunca cruzam;
 - Não escreva segredos (senhas, chaves de API) nos blocos — use referências ("use a chave do meu arquivo X").
 
-## 🎨 Identidade — ESTAÇÃO TELETYPE (operação CRA)
+## 🎨 Identidade — ESTAÇÃO TELETYPE
 
 Zero cara-de-IA: nada de gradiente roxo-lavanda, glow radial, vidro fosco ou Inter. Aqui a estação tem cara do que ela é:
 
@@ -140,7 +140,7 @@ npm install && npm test
 | Arquivo | O que é |
 |---|---|
 | `index.html` | O site inteiro (home, painel visual, terminal, lógica Firebase) |
-| `tests/cra_test.cjs` | Suíte CRA (41 checks, jsdom, sem rede) |
+| `tests/suite.cjs` | Suíte de consistência (41 checks, jsdom, sem rede) |
 | `.github/workflows/ci.yml` | CI: `npm test` + higiene anti-vibe a cada push |
 | `.github/workflows/limpeza.yml` | Action diária que apaga caixas vencidas (TTL 7 dias) |
 | `scripts/limpeza.mjs` | Script da limpeza diária |
