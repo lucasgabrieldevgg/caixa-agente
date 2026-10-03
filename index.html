@@ -23,6 +23,27 @@
   </div>
 </div>
 
+<!-- modal: configurações dos extras -->
+<div id="m-cfg" class="modal" hidden>
+  <div class="sheet">
+    <h2>⚙️ Configurações do agente</h2>
+    <p class="hint">Extras em que o agente escreve de volta. Ele relê a configuração a cada checkpoint — mudou aqui, ele obedece no próximo.</p>
+    <label style="display:flex;align-items:center;gap:8px;font-size:14px;margin:12px 0 6px;flex-wrap:wrap"><input type="checkbox" id="cfg-coment"> 💬 comentário nos blocos <small>(comenta o que fez em cada instrução)</small></label>
+    <label style="display:flex;align-items:center;gap:8px;font-size:14px;margin:6px 0;flex-wrap:wrap"><input type="checkbox" id="cfg-prog"> 📈 acompanhamento <small>(posta o que está fazendo e o que conseguiu, na aba própria)</small></label>
+    <label class="flabel" for="cfg-nivel">nível de detalhe (vale pros dois)</label>
+    <select id="cfg-nivel" class="codein full">
+      <option value="simples">simples — curtinho</option>
+      <option value="medio">médio — equilibrado</option>
+      <option value="completo">completo — detalhado</option>
+    </select>
+    <div class="note" style="border-color:var(--ambar)">⚠️ Com os extras ligados o agente <b>escreve mais</b> — pode gastar <b>tokens adicionais da sua IA</b>. Desligue quando quiser.</div>
+    <div class="row">
+      <button id="cfg-save" class="btn primary">Salvar</button>
+      <button id="cfg-close" class="btn">Cancelar</button>
+    </div>
+  </div>
+</div>
+
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <style>
@@ -192,6 +213,24 @@
   .minha .row{display:flex;gap:8px;align-items:center}
   .minha .row .btn{padding:6px 12px;font-size:12.5px;border-radius:6px}
   .minha .row .x{margin-left:auto}
+  /* ─── abas do painel ─── */
+  .tabs{display:flex;gap:8px;margin-bottom:14px}
+  .tab{flex:1;padding:10px;border:1.5px solid var(--line2);background:var(--card);border-radius:8px;font-weight:600;font-size:13.5px;box-shadow:2px 2px 0 rgba(0,0,0,.18);transition:.15s}
+  .tab.on{background:var(--fos);color:var(--fos-ink);border-color:var(--fos)}
+  /* ─── comentário do agente ─── */
+  .agcom{margin-top:10px;padding:9px 11px;background:var(--seg);border-left:4px solid var(--fos);border-radius:6px;font-size:13.5px;color:var(--ink)}
+  .agcom b{color:var(--visto-ink)}
+  /* ─── acompanhamento ─── */
+  .proghead{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px;font-size:13px;color:var(--muted);flex-wrap:wrap}
+  .prog{background:var(--card);border:1.5px solid var(--line2);border-radius:8px;padding:13px 15px;margin-bottom:11px;box-shadow:2px 2px 0 rgba(0,0,0,.18);animation:fadeUp .28s ease both}
+  .pb{font-size:10.5px;font-weight:700;letter-spacing:.1em;border-radius:5px;padding:4px 9px;border:1.5px solid currentColor;white-space:nowrap}
+  .pb.simples{color:var(--muted)}
+  .pb.medio{color:var(--novo-ink);background:var(--novo-bg)}
+  .pb.completo{color:var(--visto-ink);background:var(--visto-bg)}
+  .prog .top{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+  .prog .meta{font-size:11.5px;color:var(--muted);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .prog .texto{white-space:pre-wrap;word-break:break-word;font-size:14px}
+
   /* ─── terminal: voltar ─── */
   #btn-back{margin:0 0 12px}
 
@@ -275,6 +314,17 @@
         <option value="72">3 dias</option>
         <option value="168" selected>7 dias (máximo)</option>
       </select>
+      <label class="flabel" style="margin-top:14px">🤖 extras do agente (muda quando quiser em ⚙️)</label>
+      <div class="cardrow" style="gap:14px">
+        <label style="display:flex;align-items:center;gap:6px;font-size:13.5px"><input type="checkbox" id="new-coment" checked> 💬 comentário</label>
+        <label style="display:flex;align-items:center;gap:6px;font-size:13.5px"><input type="checkbox" id="new-prog" checked> 📈 acompanhamento</label>
+        <select id="new-nivel" class="codein" style="padding:7px 10px;font-size:13px;flex:0;min-width:0">
+          <option value="simples">simples</option>
+          <option value="medio" selected>médio</option>
+          <option value="completo">completo</option>
+        </select>
+      </div>
+      <div class="note" style="margin-top:10px;font-size:12px">⚠️ Com os extras o agente escreve mais — <b>pode gastar tokens adicionais da sua IA</b>.</div>
       <button id="btn-create" class="btn primary big" style="margin-top:14px">Criar minha caixa agora</button>
     </div>
     <div class="card">
@@ -298,6 +348,11 @@
 
 <!-- ══════════ CAIXA (visual) ══════════ -->
 <main id="view-box" hidden>
+  <div class="tabs">
+    <button id="tab-msg" class="tab on">📩 Mensagens</button>
+    <button id="tab-prog" class="tab">📈 Acompanhamento</button>
+  </div>
+  <div id="tab-mensagens">
   <section id="composer">
     <textarea id="new-text" placeholder="Escreva uma instrução para o agente… (ex.: troca o botão pra azul)"></textarea>
     <div class="row">
@@ -309,7 +364,16 @@
     </div>
   </section>
   <section id="blocks"></section>
+  </div>
+  <div id="tab-acomp" hidden>
+    <div class="proghead">
+      <span id="prog-estado"></span>
+      <span class="pb medio">nível: <b id="prog-nivel">médio</b></span>
+    </div>
+    <section id="prog-lista"></section>
+  </div>
   <div style="text-align:center;margin-top:16px">
+    <button id="btn-cfg" class="btn" style="font-size:12.5px;padding:7px 14px" title="Extras do agente: comentário, acompanhamento e nível de detalhe">⚙️ configurações</button>
     <button id="btn-rename" class="btn" style="font-size:12.5px;padding:7px 14px" title="Dá um nome à caixa — o código e o link não mudam">✏️ renomear</button>
     <button id="btn-resetbox" class="btn" style="color:var(--danger);font-size:12.5px;padding:7px 14px" title="Zera as mensagens e a memória do agente mantendo o MESMO código e link — a caixa volta a nascer">♻️ resetar caixa</button>
     <button id="btn-delbox" class="btn" style="color:var(--danger);font-size:12.5px;padding:7px 14px" title="Apaga a caixa e TODAS as mensagens — só é possível enquanto o agente não viu nada (visto = 0)">🗑 excluir esta caixa</button>
@@ -398,11 +462,16 @@ const store={
 const siteUrl=()=>location.origin+location.pathname;
 function boxUrl(code){ return siteUrl()+'?c='+code; }
 function termUrl(code){ return siteUrl()+'?c='+code+'#terminal'; }
+function cfgUrl(code){ return FB_DB+'/boxes/'+code+'/cfg.json'; }
+function comentUrl(code,id){ return FB_DB+'/boxes/'+code+'/coment/'+id+'.json'; }
+function progUrl(code){ return FB_DB+'/boxes/'+code+'/progresso.json'; }
 function blocosUrl(code){ return `${FB_DB}/boxes/${code}/blocos.json`; }
 function vistoUrl(code){ return `${FB_DB}/boxes/${code}/visto.json`; }
 
 /* ============ estado ============ */
-const S={ blocks:[], seen:0, code:null, demo:false, editId:null, theme:'light', view:'home', nome:'', criado:0, ttl:168 };
+const S={ blocks:[], seen:0, code:null, demo:false, editId:null, theme:'light', view:'home', nome:'', criado:0, ttl:168, cfg:{coment:false,prog:false,nivel:'medio'}, coment:{}, prog:[], progTab:false };
+const NIVEIS=['simples','medio','completo'];
+const PROG_HEADER='#ACOMPANHAMENTO do agente — append-only. Nao apague linhas antigas.\n';
 let db=null, boxRef=null;
 const netErr=e=>e instanceof TypeError||/network|offline|Failed to fetch|permission_denied|unavailable/i.test(String(e&&e.message||e));
 
@@ -435,18 +504,22 @@ function applyVal(v){
   const seen=parseSeenLine(v.visto);
   const nome=typeof v.nome==='string'?v.nome:'';
   const cri=(typeof v.criado==='number'&&v.criado>0)?v.criado:0;
-  const changed=JSON.stringify([b,seen,nome])!==JSON.stringify([S.blocks,S.seen,S.nome]);
-  S.blocks=b; S.seen=seen; S.nome=nome; S.criado=cri; S.ttl=ttlDe(v);
+  const cfg=(v.cfg&&typeof v.cfg==='object')?{coment:!!v.cfg.coment,prog:!!v.cfg.prog,nivel:NIVEIS.includes(v.cfg.nivel)?v.cfg.nivel:'medio'}:{coment:false,prog:false,nivel:'medio'};
+  const com=(v.coment&&typeof v.coment==='object')?v.coment:{};
+  const pr=parseProg(typeof v.progresso==='string'?v.progresso:'');
+  const changed=JSON.stringify([b,seen,nome,cfg,com,pr])!==JSON.stringify([S.blocks,S.seen,S.nome,S.cfg,S.coment,S.prog]);
+  S.blocks=b; S.seen=seen; S.nome=nome; S.criado=cri; S.ttl=ttlDe(v); S.cfg=cfg; S.coment=com; S.prog=pr;
   return changed;
 }
-async function criarCaixaFB(nome,ttlHoras){
+async function criarCaixaFB(nome,ttlHoras,cfg){
   if(!db) throw new Error('banco indisponível (sem internet?)');
   const n=sanitizeNome(nome);
   const ttl=ttlDe({ttlHoras});
+  const c={coment:!!(cfg&&cfg.coment), prog:!!(cfg&&cfg.prog), nivel:(cfg&&NIVEIS.includes(cfg.nivel))?cfg.nivel:'medio'};
   let code,tries=0;
   while(true){
     code=gerarCodigo();
-    const init={blocos:HEADER_TXT, visto:0, criado:Date.now(), ttlHoras:ttl};
+    const init={blocos:HEADER_TXT, visto:0, criado:Date.now(), ttlHoras:ttl, cfg:c};
     if(n) init.nome=n;
     const res=await db.ref('boxes/'+code).transaction(cur=>{
       if(cur) return;                       /* código ocupado → tenta outro */
@@ -532,6 +605,18 @@ async function renderMinhas(){
   wrap.hidden=false;
 }
 
+function parseProg(s){
+  return String(s||'').split('\n').map(l=>l.trim()).filter(Boolean).filter(l=>!l.startsWith('#ACOMPANHAMENTO')).map(l=>{
+    const m=l.match(/^#(\d+)\s*\|\s*([^|]+?)\s*\|\s*([^|]+?)\s*\|\s*(.+)$/);
+    if(!m) return null;
+    const nv=String(m[3]).toLowerCase();
+    return {id:parseInt(m[1],10), ts:m[2].trim(), nivel:NIVEIS.includes(nv)?nv:'medio', text:m[4].trim()};
+  }).filter(Boolean);
+}
+function progContent(es){
+  return PROG_HEADER+es.map(e=>`#${e.id} | ${e.ts} | ${e.nivel} | ${e.text}`).join('\n')+'\n';
+}
+
 /* ============ instruções da caixa ============ */
 function buildInstructions(code){
 return `================================================================
@@ -567,6 +652,30 @@ lendo visto e blocos, e monte os pendentes (id > visto).
    até uma leitura não trazer NADA novo. Só então encerre.
    Nenhuma instrução do operador pode ficar sem atendimento
    quando a tarefa termina.
+
+-- EXTRAS (comentário e acompanhamento) ------------------------
+Antes de usar, LEIA a configuração da caixa (a cada checkpoint):
+  curl "${cfgUrl(code)}"
+-> {"coment":bool,"prog":bool,"nivel":"simples"|"medio"|"completo"}
+Resposta vazia/{}, flag ausente ou false = extra INDISPONÍVEL:
+pule. Os extras fazem você escrever mais; respeite o nível pedido
+(simples = 1 frase · medio = 2-3 frases · completo = detalhado).
+
+1) COMENTÁRIO (se "coment" ligado): ao concluir/tratar o bloco #N,
+   deixe SEU comentário (dúvida, decisão, resultado, próximo passo):
+   curl -X PUT "${comentUrl(code,'N')}" -H "Content-Type: application/json" -d '"seu texto"'
+   (uma linha por bloco; escrever de novo substitui o anterior).
+
+2) ACOMPANHAMENTO (se "prog" ligado): a cada checkpoint, poste o
+   que está fazendo e o que conseguiu. Leia
+  ${progUrl(code)}
+   (pode ser null), acrescente UMA linha no FIM no formato
+   #N | data hora | nivel | texto
+   (N = maior id existente + 1; nivel = simples|medio|completo) e
+   faça PUT da string INTEIRA de volta. Postou? Renove também o
+   carimbo de atividade da caixa (evita expiração no meio do uso):
+   curl -X PUT "${FB_DB}/boxes/${code}/criado.json" -H "Content-Type: application/json" -d "MS"
+   (MS = milissegundos atuais, ex.: -d "1759450000000").
 
 -- COMO MARCAR VISTO (escreva a palavra "visto") ---------------
 Depois de CONCLUIR os pendentes, faça um PUT do número no
@@ -631,7 +740,7 @@ function renderBlocks(){
       <div class="top"><span class="idchip">#${b.id}</span>
       <span class="meta">${esc(b.ts)}${visto?' · imutável 🔒':''}</span>
       <span class="badge ${visto?'visto':'novo'}">${visto?'✓ VISTO':'NOVO'}</span></div>
-      ${acts}</div>`;
+      ${acts}${S.coment[b.id]?`<div class="agcom">💬 <b>agente:</b> ${esc(String(S.coment[b.id]))}</div>`:''}</div>`;
   }).join('');
   const p=pendentes().length;
   $('#pending').textContent = S.blocks.length
@@ -647,6 +756,7 @@ function renderTerminal(){
 `== STATUS AO VIVO ==============================
 caixa: ${S.nome?S.nome+' · ':''}${S.code}   visto ate: #${S.seen}   pendentes: ${pend.length}   blocos: ${S.blocks.length}
 expira: ${expiraInfo({criado:S.criado,ttlHoras:S.ttl}).txt}${S.criado?' · prazo '+ttlDe({ttlHoras:S.ttl})+'h':''}
+extras: coment ${S.cfg.coment?'LIGADO':'off'} · prog ${S.cfg.prog?'LIGADO':'off'} · nivel ${S.cfg.nivel}
 ================================================
 
 == BLOCOS (mensagens do operador) ==============
@@ -655,7 +765,28 @@ ${linhas}
 
 ` + buildInstructions(S.code);
 }
-function renderAll(){ renderBlocks(); renderTerminal(); }
+function renderProg(){
+  const pn=$('#prog-nivel'); if(pn) pn.textContent=S.cfg.nivel==='medio'?'médio':S.cfg.nivel;
+  const on=S.cfg.prog;
+  $('#prog-estado').textContent = on
+    ? (S.prog.length ? S.prog.length+(S.prog.length>1?' atualizações':' atualização')+' · mais recente primeiro' : 'ligado — o agente posta no primeiro checkpoint')
+    : 'desligado — ligue em ⚙️ configurações (o agente passa a postar no próximo checkpoint)';
+  const es=[...S.prog].reverse();
+  $('#prog-lista').innerHTML = es.length ? es.map(e=>
+    `<div class="prog"><div class="top"><span class="idchip">#${e.id}</span>
+      <span class="meta">${esc(e.ts)}</span>
+      <span class="pb ${e.nivel}">${e.nivel==='simples'?'simples':e.nivel==='medio'?'médio':'completo'}</span></div>
+      <div class="texto">${esc(e.text)}</div></div>`).join('')
+    : `<div class="vazio"><div class="t1">Nada por aqui ainda</div><div class="t2">${on?'O agente posta o que está fazendo e o que conseguiu a cada checkpoint.':'Ligue o acompanhamento nas ⚙️ configurações para o agente prestar contas aqui.'}</div></div>`;
+}
+function setTab(t){
+  S.progTab=(t==='prog');
+  $('#tab-msg').classList.toggle('on',!S.progTab);
+  $('#tab-prog').classList.toggle('on',S.progTab);
+  $('#tab-mensagens').hidden=S.progTab;
+  $('#tab-acomp').hidden=!S.progTab;
+}
+function renderAll(){ renderBlocks(); renderTerminal(); renderProg(); }
 
 /* ============ navegação / views ============ */
 function showView(v){
@@ -680,7 +811,7 @@ async function openBox(codeRaw,opts={}){
   const fcode=fmtCode(code);
   if(!db){ enterDemo(); S.code=fcode; showView(opts.hash==='#terminal'?'terminal':'box'); renderAll(); return; }
   if(boxRef) boxRef.off();
-  S.code=fcode; S.blocks=[]; S.seen=0; S.editId=null; S.demo=false;
+  S.code=fcode; S.blocks=[]; S.seen=0; S.editId=null; S.demo=false; S.coment={}; S.prog=[]; setTab('msg');
   history.replaceState(null,'',boxUrl(fcode)+(opts.hash||''));
   boxRef=db.ref('boxes/'+fcode);
   let snap;
@@ -756,9 +887,13 @@ async function delBlock(id){
 }
 async function resetBox(){
   if(!boxRef){ toast('Sem conexão — modo demo não grava'); return; }
-  if(!confirm(`Resetar a caixa ${S.code}?\n\n• Apaga TODAS as mensagens (inclusive as já vistas)\n• Zera a memória do agente (visto → 0)\n• O código e o link continuam OS MESMOS\n\nSem volta. Continuar?`)) return;
+  if(!confirm(`Resetar a caixa ${S.code}?\n\n• Apaga TODAS as mensagens (inclusive as já vistas)\n• Zera a memória do agente (visto → 0)\n• Limpa comentários e acompanhamento\n• O código e o link continuam OS MESMOS\n\nSem volta. Continuar?`)) return;
   try{
-    const res=await boxRef.transaction(cur=>Object.assign({},cur,{blocos:HEADER_TXT, visto:0, criado:Date.now()}));
+    const res=await boxRef.transaction(cur=>{
+      const nx={blocos:HEADER_TXT, visto:0, criado:Date.now()};
+      if(cur){ if(cur.nome) nx.nome=cur.nome; if(cur.ttlHoras) nx.ttlHoras=cur.ttlHoras; if(cur.cfg) nx.cfg=cur.cfg; }
+      return nx;
+    });
     if(res.committed){ S.editId=null; toast('Caixa resetada ✓ — mesmo link, caixa nova'); }
     else toast('Não consegui resetar — tente de novo');
   }catch(e){ banner('Erro ao resetar: '+e.message,'erro'); }
@@ -797,7 +932,14 @@ function enterDemo(){
 #2 | ${fmt(new Date(Date.now()-18e5))} | Use as cores azul e branco
 #3 | ${fmt(new Date(Date.now()-6e5))} | O logo ficou pequeno, aumenta um pouco
 #4 | ${fmt()} | Troca o botão "Comprar" para a cor verde`);
-  S.seen=2; S.nome='Projeto exemplo'; S.criado=Date.now()-36e5; S.ttl=168; banner('🟡 Sem conexão com o banco — MODO DEMONSTRAÇÃO (nada é gravado). No site publicado, funciona de verdade.');
+  S.seen=2; S.nome='Projeto exemplo'; S.criado=Date.now()-36e5; S.ttl=168;
+  S.cfg={coment:true,prog:true,nivel:'medio'};
+  S.coment={'2':'Vou de verde-fósforo no logo — combina com o resto e fica legível nos dois temas.'};
+  S.prog=parseProg(progContent([
+    {id:1,ts:fmt(new Date(Date.now()-30e5)),nivel:'medio',text:'Li a caixa: 4 blocos, 2 pendentes. Começando pela landing page.'},
+    {id:2,ts:fmt(),nivel:'simples',text:'Landing montada — logo ampliado e botão "Comprar" agora é "Assinar".'}
+  ]));
+  banner('🟡 Sem conexão com o banco — MODO DEMONSTRAÇÃO (nada é gravado). No site publicado, funciona de verdade.');
 }
 
 /* ============ clipboard ============ */
@@ -836,7 +978,8 @@ $('#btn-theme').onclick=()=>applyTheme(S.theme==='dark'?'light':'dark');
 $('#btn-create').onclick=async()=>{
   const b=$('#btn-create'); b.disabled=true; b.textContent='Criando…';
   try{
-    const {code,nome}=await criarCaixaFB($('#new-nome').value, parseInt($('#new-ttl').value,10));
+    const cfgNew={coment:$('#new-coment').checked, prog:$('#new-prog').checked, nivel:$('#new-nivel').value};
+    const {code,nome}=await criarCaixaFB($('#new-nome').value, parseInt($('#new-ttl').value,10), cfgNew);
     minhasAdd(code,nome);
     $('#new-code').textContent=code;
     $('#new-link').value=boxUrl(code);
@@ -859,6 +1002,17 @@ $('#msg-copy-url').onclick=()=>copyText(termUrl(S.code));
 $('#msg-close').onclick=()=>{$('#m-agent').hidden=true;};
 $('#msg-preview').onclick=()=>{ $('#m-agent').hidden=true; showView('terminal'); try{ history.replaceState(null,'',termUrl(S.code)); }catch(e){} };
 $('#btn-rename').onclick=()=>{ if(!S.code) return; $('#ren-in').value=S.nome||''; $('#m-ren').hidden=false; $('#ren-in').focus(); };
+$('#btn-cfg').onclick=()=>{ $('#cfg-coment').checked=!!S.cfg.coment; $('#cfg-prog').checked=!!S.cfg.prog; $('#cfg-nivel').value=S.cfg.nivel; $('#m-cfg').hidden=false; };
+$('#cfg-close').onclick=()=>{ $('#m-cfg').hidden=true; };
+$('#cfg-save').onclick=async()=>{
+  $('#m-cfg').hidden=true;
+  const cfg={coment:$('#cfg-coment').checked, prog:$('#cfg-prog').checked, nivel:$('#cfg-nivel').value};
+  if(!boxRef){ S.cfg=cfg; renderAll(); toast('Sem conexão — modo demo não grava'); return; }
+  try{ await boxRef.child('cfg').set(cfg); S.cfg=cfg; renderAll(); toast('Configuração salva ✓ — o agente obedece no próximo checkpoint'); }
+  catch(e){ toast('Não consegui salvar: '+e.message); }
+};
+$('#tab-msg').onclick=()=>setTab('msg');
+$('#tab-prog').onclick=()=>setTab('prog');
 $('#ren-close').onclick=()=>{ $('#m-ren').hidden=true; };
 $('#ren-save').onclick=async()=>{
   const n=sanitizeNome($('#ren-in').value);

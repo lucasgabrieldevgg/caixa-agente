@@ -27,8 +27,12 @@ function carregar() {
       parseBlocks, parseSeenLine, blocosContent, normalizeCode, fmtCode,
       gerarCodigo, buildInstructions, buildAgentMsg, esc, fmt,
       blocosUrl, vistoUrl, termUrl, HEADER_TXT,
-      enterDemo, renderBlocks, renderTerminal, renderAll, applyTheme,
+      enterDemo, renderBlocks, renderTerminal, renderAll, applyTheme, applyVal,
       ttlDe, expiraInfo, sanitizeNome, minhasGet, minhasAdd, minhasRm, updateChip,
+      parseProg, progContent, cfgUrl, comentUrl, progUrl, setTab, renderProg, PROG_HEADER,
+      get cfg(){ return S.cfg; }, set cfg(v){ S.cfg = v; },
+      get coment(){ return S.coment; }, set coment(v){ S.coment = v; },
+      get prog(){ return S.prog; }, set prog(v){ S.prog = v; },
       get blocks(){ return S.blocks; }, set blocks(v){ S.blocks = v; },
       get seen(){ return S.seen; }, set seen(v){ S.seen = v; },
       get code(){ return S.code; }, set code(v){ S.code = v; },
@@ -140,6 +144,77 @@ function carregar() {
     ok(term.includes('caixa: Projeto site · TEST-1234'), 'terminal mostra o nome da caixa');
     ok(d.getElementById('btn-back') && !d.getElementById('btn-back').hidden, 'terminal tem botão ← voltar para o painel');
     w.localStorage.clear();
+  }
+
+  console.log('— 💬📈 EXTRAS: comentário, acompanhamento, níveis, cfg —');
+  {
+    const dom = carregar();
+    const w = dom.window, d = w.document, X = w.__X;
+    const linhas = X.PROG_HEADER
+      + '#1 | 2026-10-02 21:00 | medio | Li a caixa: 2 blocos, comecei pela landing.\n'
+      + 'linha lixo que deve ser ignorada\n'
+      + '#2 | 2026-10-02 21:30 | completo | Landing pronta e blocos executados.\n'
+      + '#3 | 2026-10-02 22:00 | absurdo | nível inválido cai no médio\n';
+    const es = X.parseProg(linhas);
+    ok(es.length === 3, 'parseProg: 3 entradas (header e lixo ignorados)');
+    ok(es[0].id === 1 && es[0].nivel === 'medio' && es[1].nivel === 'completo', 'parseProg: id e nível corretos');
+    ok(es[2].nivel === 'medio', 'parseProg: nível inválido cai no médio');
+    const volta = X.parseProg(X.progContent(es));
+    ok(volta.length === 3 && volta[2].text === es[2].text, 'roundtrip progContent → parseProg sem perda');
+    const agora = Date.now();
+    X.applyVal({ blocos: '#1 | 2026-10-02 21:00 | faça', visto: 1, criado: agora, ttlHoras: 48,
+      cfg: { coment: 1, prog: 1, nivel: 'completo' },
+      coment: { '1': 'Feito — usei verde-fósforo.' },
+      progresso: X.progContent([{ id: 1, ts: '2026-10-02 21:30', nivel: 'simples', text: 'Feito.' }]) });
+    ok(X.cfg.coment === true && X.cfg.prog === true && X.cfg.nivel === 'completo', 'applyVal lê a cfg da caixa');
+    ok(X.coment['1'] === 'Feito — usei verde-fósforo.', 'applyVal lê comentários');
+    ok(X.prog.length === 1 && X.prog[0].nivel === 'simples', 'applyVal lê o acompanhamento');
+    X.applyVal({ blocos: '#1 | 2026-10-02 21:00 | faça', visto: 1 });
+    ok(X.cfg.coment === false && X.cfg.prog === false, 'caixa SEM cfg = extras desligados (padrão seguro)');
+    ok(X.cfgUrl('ABCD-1234').endsWith('/boxes/ABCD-1234/cfg.json'), 'URL da cfg');
+    ok(X.comentUrl('ABCD-1234', 7).endsWith('/boxes/ABCD-1234/coment/7.json'), 'URL de comentário por bloco');
+    ok(X.progUrl('ABCD-1234').endsWith('/boxes/ABCD-1234/progresso.json'), 'URL do acompanhamento');
+    const inst = X.buildInstructions('ABCD-1234');
+    ok(inst.includes('/cfg.json') && inst.includes('/coment/N.json') && inst.includes('/progresso.json'), 'protocolo documenta os 3 endereços dos extras');
+    ok(inst.includes('EXTRAS') && inst.includes('simples') && inst.includes('medio') && inst.includes('completo'), 'protocolo explica os extras e os 3 níveis');
+    ok(inst.includes('INDISPONÍVEL'), 'protocolo: cfg vazia/flag falsa = não usar');
+    const msg = X.buildAgentMsg('ABCD-1234');
+    ok(!msg.includes('cfg.json') && !msg.includes('progresso'), 'mensagem inicial continua mínima (extras moram no protocolo)');
+  }
+
+  console.log('— 🗂️ ABAS, DEMO E RENDER DOS EXTRAS —');
+  {
+    const dom = carregar();
+    const w = dom.window, d = w.document, X = w.__X;
+    X.enterDemo();
+    ok(X.cfg.coment === true && X.cfg.prog === true, 'demo nasce com extras ligados');
+    ok(X.coment['2'] && X.coment['2'].includes('verde-fósforo'), 'demo tem comentário do agente no bloco 2');
+    ok(X.prog.length === 2, 'demo tem 2 atualizações de acompanhamento');
+    X.code = 'TEST-1234';
+    X.renderBlocks();
+    ok(d.querySelector('#blocks .agcom') && d.querySelector('#blocks .agcom').textContent.includes('agente:'), 'comentário 💬 aparece colado no bloco');
+    ok(!d.querySelector('#blocks .bloco:nth-child(1) .agcom'), 'bloco SEM comentário não ganha agcom');
+    X.renderProg();
+    ok(d.getElementById('prog-estado').textContent.includes('atualizaç'), 'estado do acompanhamento mostra contagem');
+    const pbs = [...d.querySelectorAll('#prog-lista .pb')].map(x => x.textContent);
+    ok(pbs.includes('médio') && pbs.includes('simples'), 'badges de nível renderizam');
+    const ids = [...d.querySelectorAll('#prog-lista .idchip')].map(x => x.textContent);
+    ok(ids[0] === '#2' && ids[1] === '#1', 'mais recente primeiro');
+    ok(d.getElementById('tab-msg') && d.getElementById('tab-prog'), 'abas Mensagens/Acompanhamento existem');
+    ok(!d.getElementById('tab-acomp').hidden === false, 'aba acompanhamento nasce escondida');
+    X.setTab('prog');
+    ok(d.getElementById('tab-acomp').hidden === false && d.getElementById('tab-mensagens').hidden === true, 'setTab(prog) troca pra acompanhamento');
+    X.setTab('msg');
+    ok(d.getElementById('tab-mensagens').hidden === false && d.getElementById('tab-acomp').hidden === true, 'setTab(msg) volta');
+    X.cfg = { coment: false, prog: false, nivel: 'simples' };
+    X.renderProg();
+    ok(d.getElementById('prog-estado').textContent.includes('desligado'), 'desligado mostra instrução pra ligar no ⚙️');
+    X.renderTerminal();
+    ok(d.getElementById('term-out').textContent.includes('extras: coment off · prog off · nivel simples'), 'terminal mostra o estado dos extras');
+    ok(d.getElementById('cfg-coment') && d.getElementById('cfg-prog') && d.getElementById('cfg-nivel'), 'modal de configurações completo');
+    ok(d.getElementById('btn-cfg') && !d.getElementById('btn-cfg').hidden, 'botão ⚙️ configurações no rodapé');
+    ok(d.getElementById('new-coment').checked && d.getElementById('new-prog').checked, 'criação: extras marcados por padrão');
+    ok(d.getElementById('new-nivel').value === 'medio', 'criação: nível médio por padrão');
   }
 
   console.log('— 🔥 CRA: NADA DE CARA DE IA —');

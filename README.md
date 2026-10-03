@@ -39,6 +39,9 @@ Siga o protocolo: consulte a caixa a cada checkpoint e nunca encerre sem esvazi�
 - **✏️ Editar / 🗑 excluir bloco** — só enquanto o agente não viu; depois vira imutável 🔒;
 - **🗑 Excluir caixa** — só enquanto nada foi processado (visto = 0); exclusões com **transação atômica** no servidor (sem corrida com o visto);
 - **♻️ Resetar caixa** — zera mensagens e memória do agente **mantendo o mesmo código/link** (a mensagem já enviada ao agente continua valendo); uso ilimitado enquanto a caixa estiver no prazo;
+- **💬 Comentário do agente** — extra opcional: ao concluir um bloco, o agente deixa o comentário dele (dúvida, decisão, resultado) colado na instrução;
+- **📈 Acompanhamento** — aba própria onde o agente posta o que está fazendo e o que conseguiu a cada checkpoint, com nível de detalhe **simples / médio / completo**;
+- **⚙️ Configurações** — liga/desliga os extras e muda o nível a qualquer momento (o agente relê a configuração a cada checkpoint e obedece no próximo). Aviso honesto: com os extras ligados o agente escreve mais — **pode gastar tokens adicionais da sua IA**;
 - **🖥️ Terminal da IA** — `?c=SEU-CODIGO#terminal`: versão texto do painel com blocos ao vivo, prazo e protocolo completo (pro agente que tem navegador) — com botão ← voltar para o painel;
 - **REST puro** — agentes sem navegador usam `GET`/`PUT` simples, **sem token, sem login**;
 - **🌙 Tema claro/escuro**, mobile-first, zero configuração pra qualquer pessoa.
@@ -72,7 +75,7 @@ Siga o protocolo: consulte a caixa a cada checkpoint e nunca encerre sem esvazi�
 
 `visto` é um número: **tudo com id ≤ visto já foi processado**. É a memória do agente.
 
-A caixa também carrega `nome` (opcional), `ttlHoras` (prazo escolhido na criação, 24–168) e `criado` (carimbo da última atividade — é o que renova o prazo).
+A caixa também carrega `nome` (opcional), `ttlHoras` (prazo escolhido na criação, 24–168), `criado` (carimbo da última atividade — é o que renova o prazo), `cfg` `{coment, prog, nivel}` (extras), `coment/{id}` (comentários do agente por bloco) e `progresso` (fita do acompanhamento, mesmo formato `#N | data | nivel | texto`).
 
 ### API que o agente usa (REST, sem credencial)
 
@@ -95,8 +98,9 @@ O protocolo completo vive no terminal (`#terminal`) — este é o resumo:
 1. **Início:** lê `visto` + `blocos`, monta os pendentes (id > visto);
 2. **Checkpoint periódico:** a cada ~5 passos (~10 min), relê; com novidade, incorpora com o mínimo de replanejamento (nunca recomeça do zero); sem novidade, segue;
 3. **Checkpoint final obrigatório:** executa pendentes → marca visto → relê → repete até uma leitura completa não trazer nada novo. **Só então encerra**;
-4. **Anti-travamento:** consultar a caixa nunca é desculpa para esperar em loop;
-5. **Resiliência:** caixa fora do ar nunca derruba a tarefa.
+4. **Extras (se ligados nas configurações):** lê `cfg/{código}/cfg.json`; com comentário, faz PUT em `coment/N.json` ao concluir cada bloco; com acompanhamento, acrescenta linha em `progresso.json` e renova o carimbo de atividade;
+5. **Anti-travamento:** consultar a caixa nunca é desculpa para esperar em loop;
+6. **Resiliência:** caixa fora do ar nunca derruba a tarefa.
 
 ## 🕒 Retenção de dados (você escolhe o prazo)
 
@@ -129,7 +133,7 @@ Zero cara-de-IA: nada de gradiente roxo-lavanda, glow radial, vidro fosco ou Int
 npm install && npm test
 ```
 
-**58 checks** rodam em jsdom **sem rede e sem Firebase** (o app cai no modo demonstração sozinho): formato do protocolo (`#N | data | texto`, visto, pendências), códigos `XXXX-XXXX` sem caracteres ambíguos, endereços REST, protocolo gerado pro agente, render de blocos/terminal, tema persistente, escape de HTML — e a **guarda anti-vibe**: se alguém reintroduzir gradiente com transição, glow radial, roxo de IA, título-gradiente, bolinha piscando ou segredo real, a suíte quebra no CI.
+**91 checks** rodam em jsdom **sem rede e sem Firebase** (o app cai no modo demonstração sozinho): formato do protocolo (`#N | data | texto`, visto, pendências), códigos `XXXX-XXXX` sem caracteres ambíguos, endereços REST, protocolo gerado pro agente, render de blocos/terminal, tema persistente, escape de HTML — e a **guarda anti-vibe**: se alguém reintroduzir gradiente com transição, glow radial, roxo de IA, título-gradiente, bolinha piscando ou segredo real, a suíte quebra no CI.
 
 ## 📄 Arquivos
 
