@@ -2,11 +2,13 @@
 
 # 📬 Agent Inbox
 
-**https://lucasgabrieldevgg.github.io/caixa-agente**
+**https://caixa-agente.vercel.app**
+(Mirror: https://lucasgabrieldevgg.github.io/caixa-agente — same boxes, same codes.)
+
 
 > Send messages and instructions to your AI agent **while it runs the task** — no interrupting, no pausing, no re-prompting. It reads at the next checkpoint, incorporates it and confirms back by marking it as **seen**.
 
-[![ci](https://github.com/lucasgabrieldevgg/caixa-agente/actions/workflows/ci.yml/badge.svg)](https://github.com/lucasgabrieldevgg/caixa-agente/actions/workflows/ci.yml) [![site](https://img.shields.io/badge/site-github.io-186b3d)](https://lucasgabrieldevgg.github.io/caixa-agente) [![database](https://img.shields.io/badge/database-free%20firebase-ffca28)](https://firebase.google.com) [![secrets](https://img.shields.io/badge/secrets-zero-16a34a)](#-architecture) [![cost](https://img.shields.io/badge/cost-%240-success)](#)
+[![ci](https://github.com/lucasgabrieldevgg/caixa-agente/actions/workflows/ci.yml/badge.svg)](https://github.com/lucasgabrieldevgg/caixa-agente/actions/workflows/ci.yml) [![site](https://img.shields.io/badge/site-caixa--agente.vercel.app-000000)](https://caixa-agente.vercel.app) [![database](https://img.shields.io/badge/database-free%20firebase-ffca28)](https://firebase.google.com) [![secrets](https://img.shields.io/badge/secrets-zero-16a34a)](#-architecture) [![cost](https://img.shields.io/badge/cost-%240-success)](#)
 
 ---
 
@@ -18,7 +20,7 @@ Autonomous agents (Claude Code, GPT agents, etc.) run long tasks. If a new idea 
 
 ## 🚀 How to use (3 steps, no sign-up)
 
-1. **Create your box** on the [home page](https://lucasgabrieldevgg.github.io/caixa-agente) → you get an `XXXX-XXXX` code and your exclusive link;
+1. **Create your box** on the [home page](https://caixa-agente.vercel.app) → you get an `XXXX-XXXX` code and your exclusive link;
 2. **Send the ready-made message to your agent** (the site generates it for you, 🔗 button) — once, and it's valid forever;
 3. **Write blocks** whenever you want. The agent reads, runs and marks **✓ SEEN** — you follow along in real time.
 
@@ -26,7 +28,7 @@ Autonomous agents (Claude Code, GPT agents, etc.) run long tasks. If a new idea 
 
 ```
 You have an INBOX where I send instructions at any time, without interrupting your work.
-1) Read the full protocol now (valid forever): https://lucasgabrieldevgg.github.io/caixa-agente/?c=YOUR-CODE#terminal
+1) Read the full protocol now (valid forever): https://caixa-agente.vercel.app/?c=YOUR-CODE#terminal
 2) If you can only read plain text: your blocks are at https://caixa-agente-default-rtdb.firebaseio.com/boxes/YOUR-CODE/blocos.json and your memory counter at …/visto.json (everything with id ≤ seen is already done; after finishing up to block #N, PUT the number N into visto.json). Check both again every ~5 steps (~10 min), and ALWAYS check one last time before finishing.
 3) Never wait or idle because of the box: reading is quick; if it's offline, keep going.
 ```

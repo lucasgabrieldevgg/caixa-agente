@@ -2,11 +2,13 @@
 
 # 📬 Caixa de Entrada do Agente
 
-**https://lucasgabrieldevgg.github.io/caixa-agente**
+**https://caixa-agente.vercel.app**
+(Espelho: https://lucasgabrieldevgg.github.io/caixa-agente — mesmas caixas, mesmos códigos.)
+
 
 > Envie mensagens e instruções para o seu agente de IA **enquanto ele executa a tarefa** — sem interromper, sem pausar, sem refazer prompt. Ele lê no próximo checkpoint, incorpora e te confirma marcando como **visto**.
 
-[![ci](https://github.com/lucasgabrieldevgg/caixa-agente/actions/workflows/ci.yml/badge.svg)](https://github.com/lucasgabrieldevgg/caixa-agente/actions/workflows/ci.yml) [![site](https://img.shields.io/badge/site-github.io-186b3d)](https://lucasgabrieldevgg.github.io/caixa-agente) [![banco](https://img.shields.io/badge/banco-firebase%20gr%C3%A1tis-ffca28)](https://firebase.google.com) [![segredo](https://img.shields.io/badge/segredos-zero-16a34a)](#-arquitetura) [![custo](https://img.shields.io/badge/custo-R%24%200-success)](#)
+[![ci](https://github.com/lucasgabrieldevgg/caixa-agente/actions/workflows/ci.yml/badge.svg)](https://github.com/lucasgabrieldevgg/caixa-agente/actions/workflows/ci.yml) [![site](https://img.shields.io/badge/site-caixa--agente.vercel.app-000000)](https://caixa-agente.vercel.app) [![banco](https://img.shields.io/badge/banco-firebase%20gr%C3%A1tis-ffca28)](https://firebase.google.com) [![segredo](https://img.shields.io/badge/segredos-zero-16a34a)](#-arquitetura) [![custo](https://img.shields.io/badge/custo-R%24%200-success)](#)
 
 ---
 
@@ -18,7 +20,7 @@ Agentes autônomos (Claude Code, GPT agents, etc.) executam tarefas longas. Se v
 
 ## 🚀 Como usar (3 passos, sem cadastro)
 
-1. **Crie sua caixa** na [home](https://lucasgabrieldevgg.github.io/caixa-agente) → você recebe um código `XXXX-XXXX` e seu link exclusivo;
+1. **Crie sua caixa** na [home](https://caixa-agente.vercel.app) → você recebe um código `XXXX-XXXX` e seu link exclusivo;
 2. **Envie a mensagem pronta pro agente** (o site gera pra você no botão 🔗) — uma única vez, vale pra sempre;
 3. **Escreva blocos** quando quiser. O agente lê, executa e marca **✓ VISTO** — você acompanha em tempo real.
 
@@ -26,7 +28,7 @@ Agentes autônomos (Claude Code, GPT agents, etc.) executam tarefas longas. Se v
 
 ```
 Você tem uma CAIXA DE ENTRADA por onde eu envio instruções a qualquer momento, sem interromper seu trabalho.
-1) Leia agora o protocolo completo (vale para sempre): https://lucasgabrieldevgg.github.io/caixa-agente/?c=SEU-CODIGO#terminal
+1) Leia agora o protocolo completo (vale para sempre): https://caixa-agente.vercel.app/?c=SEU-CODIGO#terminal
 2) Se você só lê texto puro: seus blocos estão em https://caixa-agente-default-rtdb.firebaseio.com/boxes/SEU-CODIGO/blocos.json e sua memória em https://caixa-agente-default-rtdb.firebaseio.com/boxes/SEU-CODIGO/visto.json
 Siga o protocolo: consulte a caixa a cada checkpoint e nunca encerre sem esvaziá-la.
 ```
