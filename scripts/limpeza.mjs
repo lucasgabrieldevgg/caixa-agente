@@ -51,3 +51,4 @@ for (const code of vencidas) {
   }
 }
 console.log(`✅ Fim: ${removidas} caixa(s) removida(s).`);
+process.exit(0);  /* o client do RTDB segura sockets abertos - sem isso o runner fica pendurado */
