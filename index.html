@@ -850,8 +850,13 @@ async function openBox(codeRaw,opts={}){
   const cri=(typeof val.criado==='number')?val.criado:0;
   const ttlH=ttlDe(val);
   if(cri&&Date.now()-cri>ttlH*3600000){
-    boxRef.off(); try{ await boxRef.remove(); }catch(e){}
-    boxRef=null; throw new Error(`esta caixa expirou (venceu ${ttlH>=24?(ttlH/24)+' dia'+(ttlH>24?'s':'')+' após':ttlH+'h após'} a última mensagem) — crie uma nova`);
+    if(fcode==='8MZP6JDW'){
+      /* caixa permanente da casa: nunca se apaga — renovar e seguir */
+      try{ await boxRef.child('criado').set(Date.now()); }catch(e){}
+    }else{
+      boxRef.off(); try{ await boxRef.remove(); }catch(e){}
+      boxRef=null; throw new Error(`esta caixa expirou (venceu ${ttlH>=24?(ttlH/24)+' dia'+(ttlH>24?'s':'')+' após':ttlH+'h após'} a última mensagem) — crie uma nova`);
+    }
   }
   applyVal(snap.val());
   minhasAdd(fcode,S.nome); updateChip();
