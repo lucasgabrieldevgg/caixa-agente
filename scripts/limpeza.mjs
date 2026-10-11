@@ -32,6 +32,7 @@ const snap = await getDatabase().ref('boxes').once('value');
 const total = snap.numChildren();
 const vencidas = [];
 snap.forEach(ch => {
+  if (ch.key === '8MZP6JDW') return;  // caixa permanente da casa: nunca é varrida
   const v = ch.val() || {};
   const t = typeof v.criado === 'number' ? v.criado : 0;
   const ttlH = (typeof v.ttlHoras === 'number' && v.ttlHoras >= 1 && v.ttlHoras <= 168)
